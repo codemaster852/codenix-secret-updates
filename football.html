@@ -62,6 +62,7 @@
             border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s;
+            font-weight: bold;
         }
 
         .menu-btn:hover { background: #333; border-color: #ffcc00; transform: scale(1.05); }
@@ -73,11 +74,16 @@
             width: 100vw; height: 100vh; background: #111; padding: 20px; box-sizing: border-box;
         }
         #mobile-join-view input {
-            padding: 15px; font-size: 1.5rem; width: 80%; text-align: center;
+            padding: 15px; font-size: 2rem; width: 80%; text-align: center;
             background: #222; border: 2px solid #444; color: #ffcc00; border-radius: 10px; margin-bottom: 20px;
+            text-transform: uppercase;
         }
-        #mobile-join-view .join-btns { display: flex; gap: 10px; width: 85%; }
-        #mobile-join-view .join-btns button { flex: 1; padding: 15px; background: #333; color: white; border: none; border-radius: 8px; font-weight: bold; }
+        #mobile-join-view .join-btns { display: flex; gap: 15px; width: 90%; }
+        #mobile-join-view .join-btns button { 
+            flex: 1; padding: 20px; font-size: 1.2rem;
+            color: white; border: none; border-radius: 12px; font-weight: bold; 
+            box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+        }
 
         #mobile-controller {
             display: none;
@@ -87,17 +93,17 @@
             position: fixed; top: 0; left: 0;
         }
 
-        .ctrl-area { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; box-sizing: border-box; }
-        .dpad-container { display: grid; grid-template-columns: repeat(3, 80px); grid-template-rows: repeat(2, 80px); gap: 10px; }
+        .ctrl-area { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: space-between; padding: 0 30px; box-sizing: border-box; }
+        .dpad-container { display: grid; grid-template-columns: repeat(3, 85px); grid-template-rows: repeat(2, 85px); gap: 12px; }
         .action-container { display: flex; gap: 20px; align-items: flex-end; }
 
         .ctrl-btn {
-            width: 80px; height: 80px; background: #222; border: 4px solid #444; border-radius: 15px;
+            width: 85px; height: 85px; background: #222; border: 4px solid #444; border-radius: 20px;
             display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff;
             transition: transform 0.1s;
         }
         .ctrl-btn.active { background: #ffcc00 !important; color: #000 !important; transform: scale(1.1); border-color: #fff; }
-        .ctrl-btn.round { border-radius: 50%; width: 100px; height: 100px; font-size: 1.2rem; }
+        .ctrl-btn.round { border-radius: 50%; width: 110px; height: 110px; font-size: 1.4rem; }
 
         .score-board {
             position: absolute; top: 20px; width: 100%;
@@ -109,6 +115,8 @@
         .hidden { display: none !important; }
         #room-display { position: absolute; bottom: 10px; right: 10px; font-family: monospace; color: #ffcc00; }
         #waiting-status { margin-top: 15px; font-weight: bold; color: #0f0; font-size: 1.2rem; }
+        
+        #error-msg { color: #ff4757; margin-top: 10px; font-weight: bold; min-height: 1.5em; }
     </style>
 </head>
 <body>
@@ -130,25 +138,26 @@
         <div id="room-display" class="hidden">ROOM: <span id="room-code-txt">---</span></div>
 
         <div id="ui-overlay">
-            <h1 style="font-size: 3rem; margin-bottom: 0; letter-spacing: 4px;">PRO SOCCER XL</h1>
-            <p id="menu-status" style="color: #ffcc00; font-weight: bold;">CHOOSE MATCH TYPE</p>
+            <h1 style="font-size: 3.5rem; margin-bottom: 0; letter-spacing: 4px; text-shadow: 2px 2px 0 #000;">PRO SOCCER XL</h1>
+            <p id="menu-status" style="color: #ffcc00; font-weight: bold;">ARE YOU READY?</p>
             
             <div class="menu-grid" id="main-menu">
                 <div class="menu-btn" onclick="setMode('CPU')">
                     <h3>VS COMPUTER</h3>
-                    <p>Standard AI match</p>
+                    <p>Single Player Mode</p>
                 </div>
                 <div class="menu-btn" onclick="setMode('SCREEN')">
-                    <h3>SCREEN MODE</h3>
-                    <p>Use mobiles as gamepads</p>
+                    <h3>MULTI-DEVICE</h3>
+                    <p>Connect 2 Phones as Gamepads</p>
                 </div>
             </div>
 
             <div id="lobby-ui" class="hidden">
-                <h2 id="lobby-code" style="font-size: 5rem; color: #ffcc00; margin: 5px; text-shadow: 0 0 20px rgba(255,204,0,0.5);">----</h2>
-                <p>Waiting for controllers to join...</p>
-                <div id="waiting-status">CONNECTING...</div>
-                <button class="menu-btn" style="margin-top: 30px;" onclick="location.reload()">CANCEL</button>
+                <p>ROOM CODE:</p>
+                <h2 id="lobby-code" style="font-size: 5.5rem; color: #ffcc00; margin: 5px; text-shadow: 0 0 20px rgba(255,204,0,0.4);">----</h2>
+                <p>Enter this on both mobiles to start</p>
+                <div id="waiting-status">PREPARING ROOM...</div>
+                <button class="menu-btn" style="margin-top: 30px; padding: 10px 40px;" onclick="location.reload()">BACK TO MENU</button>
             </div>
         </div>
     </div>
@@ -156,25 +165,29 @@
     <!-- Mobile Join UI -->
     <div id="mobile-join-view" class="hidden">
         <h1 style="color: #ffcc00; margin-bottom: 5px;">PRO SOCCER XL</h1>
-        <p style="margin-bottom: 30px; opacity: 0.7;">ENTER ROOM CODE</p>
-        <input type="text" id="mobile-code-input" placeholder="00000" maxlength="5">
+        <p style="margin-bottom: 30px; opacity: 0.7;">GAMEPAD MODE</p>
+        <input type="text" id="mobile-code-input" placeholder="CODE" maxlength="5">
+        <div id="error-msg"></div>
         <div class="join-btns">
-            <button onclick="joinAs('p1')" style="background: #e74c3c;">AS P1</button>
-            <button onclick="joinAs('p2')" style="background: #f1c40f; color: black;">AS P2</button>
+            <button id="join-p1-btn" onclick="joinAs('p1')" style="background: #e74c3c;">JOIN AS P1</button>
+            <button id="join-p2-btn" onclick="joinAs('p2')" style="background: #f1c40f; color: black;">JOIN AS P2</button>
         </div>
     </div>
 
     <!-- Enhanced Mobile Controller -->
     <div id="mobile-controller">
-        <div style="padding: 20px; text-align: center; color: #444; font-weight: bold;">CONNECTED TO: <span id="ctrl-room-id">---</span></div>
+        <div style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="color: #444; font-weight: bold;">ROOM: <span id="ctrl-room-id" style="color: #ffcc00;">---</span></div>
+            <div id="player-indicator" style="padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.8rem;">-</div>
+        </div>
         <div class="ctrl-area">
             <div class="dpad-container">
                 <div id="btn-up" class="ctrl-btn" style="grid-column: 2;">JUMP</div>
-                <div id="btn-left" class="ctrl-btn" style="grid-row: 2; grid-column: 1;">◀</div>
-                <div id="btn-right" class="ctrl-btn" style="grid-row: 2; grid-column: 3;">▶</div>
+                <div id="btn-left" class="ctrl-btn" style="grid-row: 2; grid-column: 1;">LEFT</div>
+                <div id="btn-right" class="ctrl-btn" style="grid-row: 2; grid-column: 3;">RIGHT</div>
             </div>
             <div class="action-container">
-                <div id="btn-kick" class="ctrl-btn round" style="background: #e74c3c;">KICK</div>
+                <div id="btn-kick" class="ctrl-btn round" style="background: #e74c3c; box-shadow: 0 8px 0 #922b21;">KICK</div>
             </div>
         </div>
     </div>
@@ -184,35 +197,22 @@
         const SB_KEY = "sb_publishable_LE6Y0ujYmKgP8O69zu-gjA_q7GAN5wG";
         
         let supabaseClient;
-        try { supabaseClient = window.supabase.createClient(SB_URL, SB_KEY); } catch (e) {}
+        try { supabaseClient = window.supabase.createClient(SB_URL, SB_KEY); } catch (e) { console.error("Database connection failed"); }
 
         const AudioEngine = {
             ctx: null,
             init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
-            playKick() {
+            play(freq, type, dur, endFreq) {
                 this.init(); const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
-                o.type = 'sine'; o.frequency.setValueAtTime(150, this.ctx.currentTime);
-                o.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.1);
-                g.gain.setValueAtTime(0.3, this.ctx.currentTime);
-                g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
-                o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime + 0.1);
-            },
-            playJump() {
-                this.init(); const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
-                o.frequency.setValueAtTime(200, this.ctx.currentTime);
-                o.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.1);
-                g.gain.setValueAtTime(0.1, this.ctx.currentTime);
-                g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
-                o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime + 0.1);
-            },
-            playGoal() {
-                this.init(); const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
-                o.type = 'square'; o.frequency.setValueAtTime(100, this.ctx.currentTime);
-                o.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.5);
+                o.type = type; o.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                if (endFreq) o.frequency.exponentialRampToValueAtTime(endFreq, this.ctx.currentTime + dur);
                 g.gain.setValueAtTime(0.2, this.ctx.currentTime);
-                g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.5);
-                o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime + 0.5);
-            }
+                g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + dur);
+                o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime + dur);
+            },
+            kick() { this.play(150, 'sine', 0.1, 40); },
+            jump() { this.play(200, 'sine', 0.1, 400); },
+            goal() { this.play(100, 'square', 0.6, 300); }
         };
 
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -239,13 +239,13 @@
         }
 
         async function syncRoom() {
-            if (!roomCode || role === 'CONTROLLER') return;
+            if (!roomCode || role === 'CONTROLLER' || gameState === 'OVER') return;
             try {
-                const { data } = await supabaseClient.from('rooms').select('state').eq('code', roomCode).single();
+                const { data, error } = await supabaseClient.from('rooms').select('state').eq('code', roomCode).single();
                 if (data && data.state) {
                     inputs = data.state.inputs || inputs;
                     const p1J = data.state.p1Active, p2J = data.state.p2Active;
-                    document.getElementById('waiting-status').textContent = `P1: ${p1J?'READY':'...'} | P2: ${p2J?'READY':'...'}`;
+                    document.getElementById('waiting-status').textContent = `P1: ${p1J?'READY':'WAITING'} | P2: ${p2J?'READY':'WAITING'}`;
                     if (p1J && p2J && gameState === 'MENU') startGame();
                 }
             } catch (e) {}
@@ -253,24 +253,40 @@
         }
 
         async function joinAs(pKey) {
-            const code = document.getElementById('mobile-code-input').value.toUpperCase();
-            if (code.length < 3) return;
-            roomCode = code;
-            const { data } = await supabaseClient.from('rooms').select('state').eq('code', roomCode).single();
-            if (!data) return;
-            let ns = data.state || {}; ns[`${pKey}Active`] = true;
-            const { error } = await supabaseClient.from('rooms').update({ state: ns }).eq('code', roomCode);
-            if (!error) {
+            const err = document.getElementById('error-msg');
+            const codeInput = document.getElementById('mobile-code-input').value.toUpperCase().trim();
+            if (codeInput.length < 3) { err.textContent = "Enter code first!"; return; }
+            
+            err.textContent = "Connecting...";
+            roomCode = codeInput;
+            
+            const { data, error } = await supabaseClient.from('rooms').select('state').eq('code', roomCode).single();
+            if (error || !data) { err.textContent = "Room not found!"; return; }
+
+            let ns = data.state || {}; 
+            if (ns[`${pKey}Active`]) { err.textContent = "Player already joined!"; return; }
+            
+            ns[`${pKey}Active`] = true;
+            const { error: upError } = await supabaseClient.from('rooms').update({ state: ns }).eq('code', roomCode);
+            
+            if (!upError) {
                 document.getElementById('mobile-join-view').classList.add('hidden');
                 document.getElementById('mobile-controller').style.display = 'block';
                 document.getElementById('ctrl-room-id').textContent = roomCode;
+                const ind = document.getElementById('player-indicator');
+                ind.textContent = pKey.toUpperCase();
+                ind.style.backgroundColor = pKey === 'p1' ? '#e74c3c' : '#f1c40f';
+                ind.style.color = pKey === 'p1' ? 'white' : 'black';
                 setupController(pKey);
+            } else {
+                err.textContent = "Failed to join!";
             }
         }
 
         function setupController(pKey) {
             const updateState = async () => {
                 const { data } = await supabaseClient.from('rooms').select('state').eq('code', roomCode).single();
+                if (!data) return;
                 let ns = data.state || {}; ns.inputs = inputs;
                 await supabaseClient.from('rooms').update({ state: ns }).eq('code', roomCode);
             };
@@ -278,7 +294,9 @@
             const bind = (id, key) => {
                 const el = document.getElementById(id);
                 const handle = (val) => (e) => { 
-                    e.preventDefault(); inputs[pKey][key] = val; 
+                    e.preventDefault(); 
+                    if (inputs[pKey][key] === val) return;
+                    inputs[pKey][key] = val; 
                     if(val) el.classList.add('active'); else el.classList.remove('active');
                     updateState(); 
                 };
@@ -292,12 +310,25 @@
             mode = m;
             if (m === 'CPU') startGame();
             else {
-                roomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
                 document.getElementById('main-menu').classList.add('hidden');
                 document.getElementById('lobby-ui').classList.remove('hidden');
+                roomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
                 document.getElementById('lobby-code').textContent = roomCode;
-                await supabaseClient.from('rooms').insert([{ code: roomCode, state: { inputs, p1Active: false, p2Active: false } }]);
-                syncRoom();
+                
+                // Create room first
+                const { error } = await supabaseClient.from('rooms').insert([{ 
+                    code: roomCode, 
+                    state: { inputs, p1Active: false, p2Active: false } 
+                }]);
+                
+                if (error) {
+                    alert("Database error! Please try again.");
+                    location.reload();
+                } else {
+                    document.getElementById('room-display').classList.remove('hidden');
+                    document.getElementById('room-code-txt').textContent = roomCode;
+                    syncRoom();
+                }
             }
         }
 
@@ -306,8 +337,26 @@
             gameState = 'PLAY';
             document.getElementById('ui-overlay').classList.add('hidden');
             document.getElementById('p2-label').textContent = mode === 'SCREEN' ? "PLAYER 2" : "PRO CPU";
-            setInterval(() => { if(gameState === 'PLAY') { timeLeft--; if(timeLeft <= 0) gameState = 'OVER'; updateUI(); } }, 1000);
+            const timer = setInterval(() => { 
+                if(gameState === 'PLAY') { 
+                    timeLeft--; 
+                    if(timeLeft <= 0) {
+                        gameState = 'OVER'; 
+                        clearInterval(timer);
+                        showGameOver();
+                    }
+                    updateUI(); 
+                } 
+            }, 1000);
             requestAnimationFrame(tick);
+        }
+
+        function showGameOver() {
+            document.getElementById('ui-overlay').classList.remove('hidden');
+            document.getElementById('main-menu').classList.remove('hidden');
+            document.getElementById('lobby-ui').classList.add('hidden');
+            const winner = scores.p > scores.c ? "PLAYER 1 WINS!" : (scores.c > scores.p ? (mode==='CPU'?"CPU WINS!":"PLAYER 2 WINS!") : "DRAW!");
+            document.getElementById('menu-status').textContent = `GAME OVER - ${winner}`;
         }
 
         function handlePhysics() {
@@ -326,8 +375,8 @@
         function moveChar(p, inp) {
             if (inp.left) { p.vx = -8; p.tilt = -0.15; }
             else if (inp.right) { p.vx = 8; p.tilt = 0.15; }
-            else { p.vx *= 0.8; p.tilt *= 0.8; }
-            if (inp.up && p.y >= GROUND_Y) { p.vy = -16; AudioEngine.playJump(); }
+            else { p.vx *= 0.85; p.tilt *= 0.8; }
+            if (inp.up && p.y >= GROUND_Y) { p.vy = -16; AudioEngine.jump(); }
             p.vy += 0.7; p.x += p.vx; p.y += p.vy;
             if (p.y > GROUND_Y) { p.y = GROUND_Y; p.vy = 0; }
             p.x = Math.max(50, Math.min(W - 50, p.x));
@@ -338,8 +387,8 @@
             if (ball.y > GROUND_Y - ball.r) { ball.y = GROUND_Y - ball.r; ball.vy *= -0.6; ball.vx *= 0.98; }
             if (ball.x < ball.r || ball.x > W - ball.r) { ball.vx *= -0.7; ball.x = ball.x < ball.r ? ball.r : W-ball.r; }
             if (ball.y > GROUND_Y - 160) {
-                if (ball.x < 80) { scores.c++; resetBall(); AudioEngine.playGoal(); }
-                if (ball.x > W - 80) { scores.p++; resetBall(); AudioEngine.playGoal(); }
+                if (ball.x < 80) { scores.c++; resetBall(); AudioEngine.goal(); }
+                if (ball.x > W - 80) { scores.p++; resetBall(); AudioEngine.goal(); }
                 updateUI();
             }
         }
@@ -354,7 +403,10 @@
                 const force = 14 + (p.vx !== 0 ? 3 : 0);
                 ball.vx = Math.cos(ang) * force + p.vx * 0.4;
                 ball.vy = Math.sin(ang) * force;
-                AudioEngine.playKick();
+                AudioEngine.kick();
+                // Avoid sticking
+                ball.x += Math.cos(ang) * 5;
+                ball.y += Math.sin(ang) * 5;
             }
         }
 
