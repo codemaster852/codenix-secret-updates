@@ -19,6 +19,8 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
             touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         #game-container {
@@ -169,6 +171,7 @@
             font-weight: bold;
             font-size: 1.2rem;
             user-select: none;
+            touch-action: none;
         }
 
         .ctrl-btn.active {
@@ -235,7 +238,7 @@
     <div id="mobile-join-view" class="hidden">
         <h1 style="color: #ffcc00; margin-bottom: 0;">SOCCER XL</h1>
         <p style="margin-top: 5px; opacity: 0.7;">CONTROLLER MODE</p>
-        <input type="text" id="mobile-code-input" placeholder="CODE" maxlength="5">
+        <input type="text" id="mobile-code-input" placeholder="CODE" maxlength="4">
         <div id="error-msg"></div>
         <div class="join-btns">
             <button onclick="joinAs('p1')" style="background: #e74c3c;">JOIN P1</button>
@@ -262,7 +265,6 @@
         const SB_URL = "https://pqfydiligbnxpophipti.supabase.co";
         const SB_KEY = "sb_publishable_LE6Y0ujYmKgP8O69zu-gjA_q7GAN5wG";
         
-        // Configured with auth persistence off to prevent session locks in the same browser
         const sbClient = window.supabase.createClient(SB_URL, SB_KEY, {
             auth: { persistSession: false }
         });
@@ -302,7 +304,6 @@
                 document.getElementById('main-menu').classList.add('hidden');
                 document.getElementById('lobby-ui').classList.remove('hidden');
                 
-                // Generates a shorter, simpler 4-digit code for easier typing
                 roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
                 document.getElementById('lobby-code').textContent = roomCode;
 
@@ -319,12 +320,10 @@
                 }]);
 
                 if (error) {
-                    console.error("Room creation error:", error);
                     alert("Database connection error. Please refresh.");
                     return;
                 }
 
-                // Subscribe to real-time updates for player inputs and join status
                 sbClient.channel(`room_${roomCode}`)
                     .on('postgres_changes', { 
                         event: 'UPDATE', 
@@ -351,23 +350,22 @@
             const err = document.getElementById('error-msg');
             if (!codeInput) { err.textContent = "Please enter a code"; return; }
 
-            err.textContent = "Searching for room...";
+            err.textContent = "Searching...";
             
-            // Implementation of a retry loop to account for Supabase replication lag
             let roomData = null;
             for(let i=0; i<3; i++) {
                 const { data } = await sbClient.from('rooms').select('*').eq('code', codeInput).single();
                 if (data) { roomData = data; break; }
-                await new Promise(r => setTimeout(r, 800)); // Wait before retry
+                await new Promise(r => setTimeout(r, 600));
             }
 
             if (!roomData) { 
-                err.textContent = "Room '" + codeInput + "' not found. Check the code on the main screen."; 
+                err.textContent = "Room not found. Check the code."; 
                 return; 
             }
 
             let newState = roomData.state;
-            if (newState[pKey + 'Active']) { err.textContent = pKey.toUpperCase() + " slot is already taken!"; return; }
+            if (newState[pKey + 'Active']) { err.textContent = "Slot already taken!"; return; }
 
             newState[pKey + 'Active'] = true;
             
@@ -375,7 +373,7 @@
                 .update({ state: newState })
                 .eq('code', codeInput);
 
-            if (upError) { err.textContent = "Connection error. Try again."; return; }
+            if (upError) { err.textContent = "Connection error."; return; }
 
             roomCode = codeInput;
             document.getElementById('mobile-join-view').classList.add('hidden');
@@ -392,34 +390,57 @@
 
         function setupController(pKey) {
             const updateRemoteInput = async () => {
+                // Fetch latest state to avoid race condition overwrites
                 const { data } = await sbClient.from('rooms').select('state').eq('code', roomCode).single();
                 if (!data) return;
                 
                 let s = data.state;
-                s.inputs[pKey] = inputs[pKey]; // Only overwrite our specific player's data
-                
+                s.inputs[pKey] = inputs[pKey];
                 await sbClient.from('rooms').update({ state: s }).eq('code', roomCode);
             };
 
-            const bindTouch = (id, key) => {
-                const el = document.getElementById(id);
-                const handle = (isDown) => async (e) => {
-                    e.preventDefault();
-                    if (inputs[pKey][key] === isDown) return;
-                    inputs[pKey][key] = isDown;
-                    isDown ? el.classList.add('active') : el.classList.remove('active');
-                    await updateRemoteInput();
-                };
-                el.addEventListener('touchstart', handle(true));
-                el.addEventListener('touchend', handle(false));
-                el.addEventListener('mousedown', handle(true)); // Support desktop testing
-                el.addEventListener('mouseup', handle(false));
+            const handleInput = async (key, isPressed, element) => {
+                if (inputs[pKey][key] === isPressed) return;
+                inputs[pKey][key] = isPressed;
+                if (isPressed) element.classList.add('active');
+                else element.classList.remove('active');
+                await updateRemoteInput();
             };
 
-            bindTouch('btn-left', 'left');
-            bindTouch('btn-right', 'right');
-            bindTouch('btn-up', 'up');
-            bindTouch('btn-kick', 'kick');
+            const bindBtn = (id, key) => {
+                const el = document.getElementById(id);
+                // We use touchstart for immediate response
+                el.addEventListener('touchstart', (e) => {
+                    e.preventDefault(); // Stop scrolling/zooming
+                    handleInput(key, true, el);
+                }, { passive: false });
+
+                el.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handleInput(key, false, el);
+                }, { passive: false });
+
+                // Mouse support for testing
+                el.addEventListener('mousedown', (e) => handleInput(key, true, el));
+                el.addEventListener('mouseup', (e) => handleInput(key, false, el));
+            };
+
+            bindBtn('btn-left', 'left');
+            bindBtn('btn-right', 'right');
+            bindBtn('btn-up', 'up');
+            bindBtn('btn-kick', 'kick');
+
+            // Safety check: if touch ends anywhere else, clear inputs
+            window.addEventListener('touchend', () => {
+                const keys = ['left', 'right', 'up', 'kick'];
+                keys.forEach(k => {
+                    if (inputs[pKey][k]) {
+                        inputs[pKey][k] = false;
+                        document.querySelector('.ctrl-btn.active')?.classList.remove('active');
+                    }
+                });
+                updateRemoteInput();
+            });
         }
 
         // Game Core
