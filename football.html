@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pro Soccer XL - Cloud Stadium</title>
-    <!-- Include QR Code Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <title>Pro Soccer XL - Multiplayer Edition</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --sky-blue: #1a2a6c;
@@ -16,17 +15,13 @@
         }
 
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             background-color: #050505;
             color: white;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            height: 100vh; overflow: hidden;
             touch-action: none;
         }
 
@@ -40,447 +35,392 @@
             max-width: 95vw;
         }
 
-        canvas {
-            display: block;
-            background: linear-gradient(to bottom, #1a2a6c, #b21f1f, #fdbb2d);
-        }
+        canvas { display: block; background: linear-gradient(to bottom, #1a2a6c, #b21f1f, #fdbb2d); }
 
         #ui-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
             background: var(--ui-bg);
-            z-index: 100;
-            text-align: center;
+            z-index: 100; text-align: center;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            width: 80%;
+            margin-top: 30px;
         }
 
         .menu-btn {
-            background: white;
-            color: black;
-            border: none;
-            padding: 15px 40px;
-            margin: 10px;
-            font-weight: bold;
-            font-size: 1.1rem;
-            border-radius: 8px;
+            background: #222;
+            border: 2px solid #444;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: transform 0.2s, background 0.2s;
-            width: 250px;
+            transition: all 0.2s;
         }
 
-        .menu-btn:hover { background: #eee; transform: scale(1.05); }
-        .menu-btn.accent { background: var(--ai-color); }
+        .menu-btn:hover { background: #333; border-color: #ffcc00; transform: scale(1.05); }
+        .menu-btn h3 { margin: 0 0 10px 0; color: #ffcc00; }
+        .menu-btn p { margin: 0; font-size: 0.8rem; opacity: 0.7; }
 
-        .hidden { display: none !important; }
-
-        .score-board {
-            position: absolute;
-            top: 20px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        .team-box {
-            padding: 10px 30px;
-            min-width: 120px;
-            text-align: center;
-            border: 2px solid white;
-        }
-
-        .timer-box {
-            background: #000;
-            padding: 10px 25px;
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #0f0;
-            border: 2px solid white;
-            min-width: 80px;
-        }
-
+        /* Mobile Controller Styles */
         #mobile-controller {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            display: none;
+            width: 100vw; height: 100vh;
             background: #111;
-            display: grid;
+            grid-template-areas: "dpad actions";
             grid-template-columns: 1fr 1fr;
-            z-index: 1000;
+            user-select: none;
         }
 
-        .d-pad {
-            display: grid;
-            grid-template-areas: ". up ." "left . right" ". down .";
-            gap: 15px;
-            padding: 30px;
-        }
+        .dpad { grid-area: dpad; display: grid; grid-template-columns: repeat(3, 1fr); align-items: center; justify-items: center; }
+        .actions { grid-area: actions; display: grid; grid-template-columns: repeat(2, 1fr); align-items: center; justify-items: center; }
 
         .ctrl-btn {
-            background: rgba(255,255,255,0.1);
-            border: 3px solid white;
-            color: white;
+            width: 80px; height: 80px;
+            background: #333;
             border-radius: 50%;
-            width: 90px;
-            height: 90px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            user-select: none;
-            touch-action: manipulation;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; border: 4px solid #555;
+            touch-action: none;
         }
+        .ctrl-btn:active { background: #555; transform: scale(0.9); }
 
-        .ctrl-btn:active { background: rgba(255,255,255,0.4); }
-
-        #room-display {
-            font-family: monospace;
-            font-size: 3rem;
-            color: var(--ai-color);
-            margin: 10px 0;
-            letter-spacing: 10px;
-            background: #222;
-            padding: 10px 20px;
-            border-radius: 10px;
+        .score-board {
+            position: absolute; top: 20px; width: 100%;
+            display: flex; justify-content: center; z-index: 10;
         }
+        .team-box { padding: 10px 30px; min-width: 120px; text-align: center; border: 2px solid white; }
+        .timer-box { background: #000; padding: 10px 25px; font-size: 2.5rem; color: #0f0; border: 2px solid white; }
 
-        #qrcode-container {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px auto;
-            width: 150px;
-            height: 150px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        .hidden { display: none !important; }
+        #room-display { position: absolute; bottom: 10px; right: 10px; font-family: monospace; color: #ffcc00; }
     </style>
 </head>
 <body>
 
+    <!-- Game View -->
     <div id="game-container">
         <div class="score-board">
-            <div id="p1-ui" class="team-box" style="background: var(--player-color); border-radius: 10px 0 0 10px;">
+            <div class="team-box" id="p1-ui" style="background: var(--player-color); border-radius: 10px 0 0 10px;">
                 <div style="font-size: 0.8rem;">PLAYER 1</div>
-                <div id="p-score" style="font-size: 2rem;">0</div>
+                <div id="p-score">0</div>
             </div>
             <div class="timer-box" id="timer">60</div>
-            <div id="p2-ui" class="team-box" style="background: var(--ai-color); color: black; border-radius: 0 10px 10px 0;">
+            <div class="team-box" id="p2-ui" style="background: var(--ai-color); color: black; border-radius: 0 10px 10px 0;">
                 <div id="p2-label" style="font-size: 0.8rem;">PRO CPU</div>
-                <div id="c-score" style="font-size: 2rem;">0</div>
+                <div id="c-score">0</div>
             </div>
         </div>
 
         <canvas id="gameCanvas"></canvas>
+        <div id="room-display" class="hidden">ROOM: <span id="room-code-txt">---</span></div>
 
         <div id="ui-overlay">
-            <h1 id="menu-title" style="font-size: 3rem; margin-bottom: 20px;">PRO SOCCER XL</h1>
+            <h1 style="font-size: 3rem; margin-bottom: 0;">PRO SOCCER XL</h1>
+            <p id="menu-status" style="color: #ffcc00;">SELECT GAME MODE</p>
             
-            <div id="main-menu">
-                <button class="menu-btn" onclick="startMode('SOLO')">VS COMPUTER</button>
-                <button class="menu-btn accent" onclick="showScreenMode()">SCREEN MODE (STADIUM)</button>
-                <button class="menu-btn" onclick="startMode('ONLINE')">ONLINE MULTIPLAYER</button>
-            </div>
-
-            <div id="room-menu" class="hidden">
-                <h2 style="margin: 0;">STADIUM READY</h2>
-                <p style="margin: 5px 0;">Scan to Join as Controller:</p>
-                
-                <div id="qrcode-container">
-                    <div id="qrcode"></div>
+            <div class="menu-grid" id="main-menu">
+                <div class="menu-btn" onclick="setMode('CPU')">
+                    <h3>VS COMPUTER</h3>
+                    <p>Classic single player</p>
                 </div>
-
-                <div id="room-display">----</div>
-                <p id="room-status">Waiting for Players (0/2)...</p>
-                <button class="menu-btn" onclick="cancelMode()">CANCEL</button>
+                <div class="menu-btn" onclick="setMode('SCREEN')">
+                    <h3>SCREEN MODE</h3>
+                    <p>Use 2 mobiles as controllers</p>
+                </div>
+                <div class="menu-btn" onclick="setMode('ONLINE')">
+                    <h3>ONLINE MATCH</h3>
+                    <p>Play against anyone</p>
+                </div>
             </div>
 
-            <div id="online-menu" class="hidden">
-                <h2 id="online-status">FINDING MATCH...</h2>
-                <button class="menu-btn" style="margin-top:20px" onclick="cancelMode()">CANCEL</button>
+            <div id="lobby-ui" class="hidden">
+                <h2 id="lobby-code">----</h2>
+                <p>Scan or enter this code on your mobile</p>
+                <button class="menu-btn" onclick="location.reload()">CANCEL</button>
             </div>
         </div>
     </div>
 
-    <div id="mobile-controller" class="hidden">
-        <div class="d-pad">
-            <div style="grid-area: up" class="ctrl-btn" ontouchstart="handleTouch('ArrowUp', true)" ontouchend="handleTouch('ArrowUp', false)">▲</div>
-            <div style="grid-area: left" class="ctrl-btn" ontouchstart="handleTouch('ArrowLeft', true)" ontouchend="handleTouch('ArrowLeft', false)">◀</div>
-            <div style="grid-area: right" class="ctrl-btn" ontouchstart="handleTouch('ArrowRight', true)" ontouchend="handleTouch('ArrowRight', false)">▶</div>
+    <!-- Mobile Controller View -->
+    <div id="mobile-controller">
+        <div class="dpad">
+            <div></div><div class="ctrl-btn" id="btn-up">▲</div><div></div>
+            <div class="ctrl-btn" id="btn-left">◀</div><div></div><div class="ctrl-btn" id="btn-right">▶</div>
         </div>
-        <div style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-direction: column;">
-            <div class="ctrl-btn" style="background: #e74c3c; width: 110px; height: 110px;" ontouchstart="handleTouch('Space', true)" ontouchend="handleTouch('Space', false)">KICK</div>
-            <div class="ctrl-btn" style="background: #3498db;" ontouchstart="handleTouch('ShiftLeft', true)" ontouchend="handleTouch('ShiftLeft', false)">DASH</div>
+        <div class="actions">
+            <div class="ctrl-btn" style="background: #e74c3c;" id="btn-kick">KICK</div>
+            <div class="ctrl-btn" style="background: #f1c40f; color: black;" id="btn-power">SHR</div>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, collection, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+    <script>
+        const SB_URL = "https://pqfydiligbnxpophipti.supabase.co";
+        const SB_KEY = "sb_publishable_LE6Y0ujYmKgP8O69zu-gjA_q7GAN5wG";
+        
+        // Fix: Use the global supabase object correctly from the script import
+        let supabaseClient;
+        try {
+            supabaseClient = window.supabase.createClient(SB_URL, SB_KEY);
+        } catch (e) {
+            console.error("Supabase initialization failed", e);
+        }
 
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-soccer-app';
-
-        let gameMode = 'MENU'; 
-        let isHost = false;
-        let roomId = null;
-        let currentUser = null;
-        let players = [
-            { x: 250, y: 520, vx: 0, vy: 0, r: 38, color: '#e74c3c', keys: {}, score: 0 },
-            { x: 950, y: 520, vx: 0, vy: 0, r: 38, color: '#f1c40f', keys: {}, score: 0 }
-        ];
-        let ball = { x: 600, y: 300, vx: 0, vy: 0, r: 16 };
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const W = 1200, H = 600, GROUND_Y = 520;
+        const W = 1200, H = 600, GROUND_Y = H - 80;
         canvas.width = W; canvas.height = H;
 
-        const getRoomDoc = (id) => doc(db, 'artifacts', appId, 'public', 'data', 'rooms', id);
+        let mode = 'CPU'; 
+        let role = 'HOST'; // HOST or GUEST
+        let roomCode = null;
+        let channel = null;
+        let gameState = 'MENU';
+        let timeLeft = 60;
+        let scores = { p: 0, c: 0 };
+        
+        // Input States
+        let inputs = {
+            p1: { left: false, right: false, up: false, kick: false, power: false },
+            p2: { left: false, right: false, up: false, kick: false, power: false }
+        };
 
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
+        const ball = { x: W/2, y: H/2, r: 16, vx: 0, vy: 0, rot: 0, flame: false };
+        const p1 = { x: 250, y: GROUND_Y, vx: 0, vy: 0, r: 38, color: '#e74c3c', jumpCount: 0, tackling: 0 };
+        const p2 = { x: W-250, y: GROUND_Y, vx: 0, vy: 0, r: 38, color: '#f1c40f', jumpCount: 0, tackling: 0 };
+
+        // Initialize Audio
+        const AudioEngine = {
+            ctx: null,
+            play(t) {
+                if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
+                o.connect(g); g.connect(this.ctx.destination);
+                o.start(); o.stop(this.ctx.currentTime + 0.1);
             }
         };
 
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            if (!user) initAuth();
-            else checkUrlParams();
-        });
+        // Check if user is on mobile via URL param
+        const urlParams = new URLSearchParams(window.location.search);
+        const joinCode = urlParams.get('join');
+        const isController = !!joinCode;
 
-        function checkUrlParams() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const join = urlParams.get('join');
-            if (join) {
-                roomId = join;
-                document.getElementById('game-container').classList.add('hidden');
-                document.getElementById('mobile-controller').classList.remove('hidden');
-                joinRoomAsController();
-            }
+        if (isController) {
+            setupController(joinCode);
         }
 
-        async function joinRoomAsController() {
-            if (!currentUser) return;
-            const roomRef = getRoomDoc(roomId);
-            await updateDoc(roomRef, {
-                [`players.${currentUser.uid}`]: { keys: {} }
+        async function setupController(code) {
+            document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('mobile-controller').style.display = 'grid';
+            
+            roomCode = code;
+            channel = supabaseClient.channel(`room_${code}`);
+            channel.subscribe(status => {
+                if(status === 'SUBSCRIBED') {
+                    console.log("Controller Connected");
+                }
             });
+
+            const bind = (id, key, player) => {
+                const el = document.getElementById(id);
+                const update = (val) => {
+                    channel.send({
+                        type: 'broadcast',
+                        event: 'input',
+                        payload: { player: urlParams.get('p') || 'p2', key, val }
+                    });
+                };
+                el.addEventListener('touchstart', (e) => { e.preventDefault(); update(true); });
+                el.addEventListener('touchend', (e) => { e.preventDefault(); update(false); });
+            };
+
+            bind('btn-up', 'up'); bind('btn-left', 'left'); bind('btn-right', 'right');
+            bind('btn-kick', 'kick'); bind('btn-power', 'power');
         }
 
-        window.handleTouch = (key, state) => {
-            if (!roomId || !currentUser) return;
-            const roomRef = getRoomDoc(roomId);
-            updateDoc(roomRef, {
-                [`players.${currentUser.uid}.keys.${key}`]: state
-            }).catch(e => console.error(e));
-        };
-
-        window.startMode = (mode) => {
-            gameMode = mode;
-            if (mode === 'SOLO') {
-                document.getElementById('ui-overlay').classList.add('hidden');
-                resetGame();
-            } else if (mode === 'ONLINE') {
-                findOnlineMatch();
-            }
-        };
-
-        window.showScreenMode = async () => {
-            if (!currentUser) return;
-            gameMode = 'SCREEN';
-            roomId = Math.floor(1000 + Math.random() * 9000).toString();
-            
-            // Clear and Generate QR Code
-            const qrContainer = document.getElementById('qrcode');
-            qrContainer.innerHTML = '';
-            const joinUrl = window.location.href.split('?')[0] + "?join=" + roomId;
-            
-            new QRCode(qrContainer, {
-                text: joinUrl,
-                width: 150,
-                height: 150,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
-
-            document.getElementById('room-display').textContent = roomId;
-            document.getElementById('main-menu').classList.add('hidden');
-            document.getElementById('room-menu').classList.remove('hidden');
-            
-            isHost = true;
-            const roomRef = getRoomDoc(roomId);
-            await setDoc(roomRef, { 
-                status: 'waiting', 
-                players: {}, 
-                ball: {x:W/2, y:H/2}, 
-                lastUpdate: Date.now() 
-            });
-
-            onSnapshot(roomRef, (snap) => {
-                const data = snap.data();
-                if (!data) return;
-                const pKeys = Object.keys(data.players || {});
-                document.getElementById('room-status').textContent = `Waiting for Players (${pKeys.length}/2)...`;
+        async function setMode(m) {
+            mode = m;
+            if (m === 'CPU') {
+                startGame();
+            } else if (m === 'SCREEN' || m === 'ONLINE') {
+                roomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+                document.getElementById('main-menu').classList.add('hidden');
+                document.getElementById('lobby-ui').classList.remove('hidden');
+                document.getElementById('lobby-code').textContent = roomCode;
+                document.getElementById('menu-status').textContent = m === 'SCREEN' ? "WAITING FOR 2 CONTROLLERS" : "WAITING FOR OPPONENT";
                 
-                pKeys.forEach((uid, idx) => {
-                    if (idx < 2) players[idx].keys = data.players[uid].keys || {};
-                });
+                initRealtime(roomCode);
+            }
+        }
 
-                if (pKeys.length === 2 && data.status === 'waiting') {
-                    document.getElementById('ui-overlay').classList.add('hidden');
-                    resetGame();
-                    updateDoc(roomRef, { status: 'playing' });
+        function initRealtime(code) {
+            channel = supabaseClient.channel(`room_${code}`);
+            
+            channel
+            .on('broadcast', { event: 'input' }, ({ payload }) => {
+                inputs[payload.player][payload.key] = payload.val;
+                if (gameState === 'MENU' && mode === 'ONLINE') startGame();
+            })
+            .subscribe(status => {
+                if (status === 'SUBSCRIBED') {
+                    document.getElementById('room-display').classList.remove('hidden');
+                    document.getElementById('room-code-txt').textContent = code;
                 }
-            }, (err) => console.error("Permission Error:", err));
-        };
+            });
 
-        async function findOnlineMatch() {
-            if (!currentUser) return;
-            document.getElementById('main-menu').classList.add('hidden');
-            document.getElementById('online-menu').classList.remove('hidden');
-            
-            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'rooms'), where('status', '==', 'lobby'));
-            const querySnapshot = await getDocs(q);
-            
-            if (querySnapshot.empty) {
-                roomId = Math.random().toString(36).substring(7);
-                isHost = true;
-                const roomRef = getRoomDoc(roomId);
-                await setDoc(roomRef, { 
-                    status: 'lobby', 
-                    players: { [currentUser.uid]: { keys: {} } },
-                    ball: { x: W/2, y: H/2, vx: 0, vy: 0 },
-                    scores: { p1: 0, p2: 0 },
-                    lastUpdate: Date.now()
+            if(role === 'GUEST') {
+                channel.on('broadcast', { event: 'sync' }, ({ payload }) => {
+                    Object.assign(ball, payload.ball);
+                    Object.assign(p1, payload.p1);
+                    Object.assign(p2, payload.p2);
+                    scores = payload.scores;
+                    timeLeft = payload.timeLeft;
+                    updateUI();
                 });
-                onSnapshot(roomRef, (snap) => {
-                    const data = snap.data();
-                    if(data && data.status === 'playing') document.getElementById('ui-overlay').classList.add('hidden');
-                });
+            }
+        }
+
+        function startGame() {
+            gameState = 'PLAY';
+            document.getElementById('ui-overlay').classList.add('hidden');
+            if (mode !== 'CPU') {
+                document.getElementById('p2-label').textContent = mode === 'SCREEN' ? "PLAYER 2" : "ONLINE OPP";
+            }
+            
+            // Start clock
+            const timerInt = setInterval(() => {
+                if(gameState === 'PLAY' && role === 'HOST') {
+                    timeLeft--;
+                    if(timeLeft <= 0) {
+                        gameState = 'OVER';
+                        clearInterval(timerInt);
+                    }
+                    updateUI();
+                } else if (gameState === 'OVER') {
+                    clearInterval(timerInt);
+                }
+            }, 1000);
+
+            requestAnimationFrame(tick);
+        }
+
+        function handlePhysics() {
+            handleMovement(p1, inputs.p1);
+
+            if (mode === 'CPU') {
+                const dist = ball.x - p2.x;
+                inputs.p2.left = dist < -40;
+                inputs.p2.right = dist > 40;
+                inputs.p2.up = ball.y < p2.y - 100 && Math.abs(dist) < 100;
+                handleMovement(p2, inputs.p2);
             } else {
-                const roomDoc = querySnapshot.docs[0];
-                roomId = roomDoc.id;
-                isHost = false;
-                const roomRef = getRoomDoc(roomId);
-                await updateDoc(roomRef, {
-                    [`players.${currentUser.uid}`]: { keys: {} },
-                    status: 'playing'
-                });
-                onSnapshot(roomRef, (snap) => {
-                    const data = snap.data();
-                    if(data && data.status === 'playing'){
-                        ball.x = data.ball.x; ball.y = data.ball.y;
-                        if(data.p1) { players[0].x = data.p1.x; players[0].y = data.p1.y; }
-                        if(data.p2) { players[1].x = data.p2.x; players[1].y = data.p2.y; }
-                        players[0].score = data.scores.p1; players[1].score = data.scores.p2;
-                        document.getElementById('ui-overlay').classList.add('hidden');
-                    }
+                handleMovement(p2, inputs.p2);
+            }
+
+            updateBall();
+            checkCollision(p1);
+            checkCollision(p2);
+
+            if (mode === 'ONLINE' && role === 'HOST' && frame % 2 === 0) {
+                channel.send({
+                    type: 'broadcast',
+                    event: 'sync',
+                    payload: { ball, p1, p2, scores, timeLeft }
                 });
             }
         }
 
-        function resetGame() {
-            ball = { x: W/2, y: H/3, vx: 0, vy: 0, r: 16 };
-            players[0].x = 250; players[1].x = 950;
-            players.forEach(p => { p.y = GROUND_Y; p.vx = p.vy = 0; });
+        function handleMovement(p, inp) {
+            if (inp.left) p.vx = -7;
+            else if (inp.right) p.vx = 7;
+            else p.vx *= 0.8;
+
+            if (inp.up && p.y >= GROUND_Y) {
+                p.vy = -15;
+                AudioEngine.play();
+            }
+
+            p.vy += 0.6; p.x += p.vx; p.y += p.vy;
+            if (p.y > GROUND_Y) { p.y = GROUND_Y; p.vy = 0; }
+            p.x = Math.max(40, Math.min(W - 40, p.x));
         }
 
-        function update() {
-            const isUIVisible = !document.getElementById('ui-overlay').classList.contains('hidden');
-            if (gameMode === 'MENU' || (isUIVisible && gameMode !== 'SCREEN')) return;
-
-            if (gameMode === 'SOLO') {
-                players[0].keys['ArrowLeft'] = window.keys['ArrowLeft'] || window.keys['KeyA'];
-                players[0].keys['ArrowRight'] = window.keys['ArrowRight'] || window.keys['KeyD'];
-                players[0].keys['ArrowUp'] = window.keys['ArrowUp'] || window.keys['KeyW'];
-                players[1].keys['ArrowLeft'] = ball.x < players[1].x - 30;
-                players[1].keys['ArrowRight'] = ball.x > players[1].x + 30;
-                players[1].keys['ArrowUp'] = ball.y < players[1].y - 100 && Math.abs(ball.x - players[1].x) < 50;
+        function updateBall() {
+            ball.vy += 0.5; ball.x += ball.vx; ball.y += ball.vy;
+            if (ball.y > GROUND_Y - ball.r) { ball.y = GROUND_Y - ball.r; ball.vy *= -0.7; ball.vx *= 0.98; }
+            if (ball.x < ball.r || ball.x > W - ball.r) { ball.vx *= -0.7; ball.x = ball.x < ball.r ? ball.r : W-ball.r; }
+            
+            if (ball.y > GROUND_Y - 160) {
+                if (ball.x < 80) score('c');
+                if (ball.x > W - 80) score('p');
             }
+        }
 
-            if (isHost || gameMode === 'SOLO') {
-                players.forEach(p => {
-                    if (p.keys['ArrowLeft']) p.vx = -7;
-                    else if (p.keys['ArrowRight']) p.vx = 7;
-                    else p.vx *= 0.8;
-                    if (p.keys['ArrowUp'] && p.y === GROUND_Y) p.vy = -15;
-                    p.vy += 0.6; p.x += p.vx; p.y += p.vy;
-                    if (p.y > GROUND_Y) { p.y = GROUND_Y; p.vy = 0; }
-                    p.x = Math.max(40, Math.min(W-40, p.x));
+        function score(who) {
+            scores[who]++;
+            ball.x = W/2; ball.y = H/3; ball.vx = 0; ball.vy = 0;
+            updateUI();
+        }
 
-                    const dx = ball.x - p.x, dy = ball.y - (p.y - 60);
-                    const dist = Math.sqrt(dx*dx + dy*dy);
-                    if (dist < ball.r + p.r) {
-                        const ang = Math.atan2(dy, dx);
-                        ball.vx = Math.cos(ang) * 12 + p.vx * 0.5;
-                        ball.vy = Math.sin(ang) * 12 + p.vy * 0.5;
-                    }
-                });
-
-                ball.vy += 0.5; ball.x += ball.vx; ball.y += ball.vy;
-                if (ball.y > GROUND_Y - ball.r) { ball.y = GROUND_Y - ball.r; ball.vy *= -0.7; ball.vx *= 0.98; }
-                if (ball.x < ball.r || ball.x > W-ball.r) { ball.vx *= -0.7; ball.x = (ball.x < ball.r) ? ball.r : W-ball.r; }
-                
-                if (ball.y > GROUND_Y - 160) {
-                    if (ball.x < 80) { players[1].score++; resetGame(); }
-                    if (ball.x > W-80) { players[0].score++; resetGame(); }
-                }
-
-                if(gameMode === 'ONLINE' && Date.now() - (window.lastOnlineSync || 0) > 60){
-                    window.lastOnlineSync = Date.now();
-                    const roomRef = getRoomDoc(roomId);
-                    updateDoc(roomRef, {
-                        ball: {x: ball.x, y: ball.y},
-                        p1: {x: players[0].x, y: players[0].y},
-                        p2: {x: players[1].x, y: players[1].y},
-                        scores: {p1: players[0].score, p2: players[1].score}
-                    }).catch(()=>{});
-                }
+        function checkCollision(p) {
+            const dx = ball.x - p.x, dy = ball.y - (p.y - 60);
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < ball.r + p.r) {
+                const ang = Math.atan2(dy, dx);
+                ball.vx = Math.cos(ang) * 15 + p.vx * 0.5;
+                ball.vy = Math.sin(ang) * 15;
+                AudioEngine.play();
             }
+        }
 
-            document.getElementById('p-score').textContent = players[0].score;
-            document.getElementById('c-score').textContent = players[1].score;
+        function updateUI() {
+            document.getElementById('p-score').textContent = scores.p;
+            document.getElementById('c-score').textContent = scores.c;
+            document.getElementById('timer').textContent = timeLeft;
         }
 
         function draw() {
-            ctx.fillStyle = '#1a2a6c'; ctx.fillRect(0,0,W,H);
-            ctx.fillStyle = '#2ecc71'; ctx.fillRect(0, GROUND_Y, W, 80);
-            ctx.strokeStyle = '#fff'; ctx.lineWidth = 4;
-            ctx.strokeRect(0, GROUND_Y-160, 80, 160);
-            ctx.strokeRect(W-80, GROUND_Y-160, 80, 160);
+            ctx.clearRect(0, 0, W, H);
+            ctx.fillStyle = '#27ae60'; ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 5;
+            ctx.strokeRect(0, GROUND_Y - 160, 80, 160);
+            ctx.strokeRect(W - 80, GROUND_Y - 160, 80, 160);
+            drawPlayer(p1); drawPlayer(p2);
             ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2); ctx.fill();
-            players.forEach(p => {
-                ctx.fillStyle = p.color;
-                ctx.beginPath(); ctx.roundRect(p.x-25, p.y-50, 50, 45, 10); ctx.fill();
-                ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(p.x, p.y-75, 40, 0, Math.PI*2); ctx.fill();
-            });
         }
 
-        function loop() { update(); draw(); requestAnimationFrame(loop); }
-        loop();
+        function drawPlayer(p) {
+            ctx.fillStyle = p.color; ctx.beginPath(); ctx.roundRect(p.x - 25, p.y - 50, 50, 45, 10); ctx.fill();
+            ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(p.x, p.y - 75, 40, 0, Math.PI*2); ctx.fill();
+        }
 
-        window.keys = {};
-        window.addEventListener('keydown', e => window.keys[e.code] = true);
-        window.addEventListener('keyup', e => window.keys[e.code] = false);
-        window.cancelMode = () => location.reload();
+        let frame = 0;
+        function tick() {
+            if (gameState === 'PLAY') {
+                frame++;
+                if(role === 'HOST') handlePhysics();
+                draw();
+            }
+            requestAnimationFrame(tick);
+        }
+
+        window.onkeydown = (e) => {
+            if (e.code === 'ArrowLeft') inputs.p1.left = true;
+            if (e.code === 'ArrowRight') inputs.p1.right = true;
+            if (e.code === 'ArrowUp') inputs.p1.up = true;
+            if (gameState === 'MENU' && mode === 'CPU') startGame();
+        };
+        window.onkeyup = (e) => {
+            if (e.code === 'ArrowLeft') inputs.p1.left = false;
+            if (e.code === 'ArrowRight') inputs.p1.right = false;
+            if (e.code === 'ArrowUp') inputs.p1.up = false;
+        };
 
     </script>
 </body>
