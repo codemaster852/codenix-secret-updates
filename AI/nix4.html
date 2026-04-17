@@ -1,0 +1,2393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Nix 4 · Adaptive Intelligence v5</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#020508;--sf:#05101a;--pan:#071520;--brd:#0a2a40;
+  --n1:#00e5ff;--n2:#00ff88;--n3:#7b2fff;--n4:#ff9500;--danger:#ff4060;
+  --tx:#c8e8f5;--mu:#3a6070;
+  --H:'Share Tech Mono',monospace;--D:'Orbitron',sans-serif;--B:'Exo 2',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--tx);font-family:var(--B);height:100%;overflow:hidden}
+body::before{content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(to bottom,transparent 0,transparent 3px,rgba(0,229,255,.012) 3px,rgba(0,229,255,.012) 4px);
+  pointer-events:none;z-index:9999}
+
+#app{display:grid;grid-template-rows:54px 1fr 60px;
+  grid-template-columns:248px 1fr 206px;
+  grid-template-areas:"H H H""S C I""F F F";height:100vh}
+
+/* HEADER */
+header{grid-area:H;display:flex;align-items:center;gap:10px;padding:0 22px;
+  background:var(--sf);border-bottom:1px solid var(--brd);position:relative;overflow:hidden}
+header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--n1),transparent);animation:gl 4s linear infinite}
+@keyframes gl{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.logo{font-family:var(--D);font-size:1.18rem;font-weight:900;letter-spacing:.15em;
+  color:var(--n1);text-shadow:0 0 18px var(--n1);user-select:none}
+.logo em{color:var(--n3);font-style:normal;text-shadow:0 0 18px var(--n3)}
+.bdg{font-family:var(--H);font-size:.52rem;background:rgba(0,229,255,.07);
+  border:1px solid rgba(0,229,255,.18);color:var(--n1);border-radius:3px;padding:2px 7px;letter-spacing:.09em}
+.bdg.o{color:var(--n4);border-color:rgba(255,149,0,.3);background:rgba(255,149,0,.07)}
+.bdg.g{color:var(--n2);border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.07)}
+.hR{margin-left:auto;display:flex;align-items:center;gap:8px}
+.dl{width:8px;height:8px;border-radius:50%;background:var(--n2);box-shadow:0 0 10px var(--n2);animation:bl 2s ease-in-out infinite}
+@keyframes bl{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.65)}}
+#hSt{font-family:var(--H);font-size:.6rem;color:var(--n2)}
+
+/* SIDEBAR */
+aside.S{grid-area:S;background:var(--sf);border-right:1px solid var(--brd);
+  padding:12px 10px;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
+aside.S::-webkit-scrollbar{width:3px}aside.S::-webkit-scrollbar-thumb{background:var(--brd)}
+.sL{font-family:var(--H);font-size:.53rem;color:var(--mu);letter-spacing:.2em;
+  text-transform:uppercase;border-left:2px solid var(--n3);padding-left:7px}
+.card{background:var(--pan);border:1px solid var(--brd);border-radius:6px;padding:9px 11px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--n3),var(--n1))}
+.card h3{font-family:var(--D);font-size:.64rem;color:var(--n1);letter-spacing:.1em;margin-bottom:7px}
+.sr{display:flex;justify-content:space-between;font-family:var(--H);font-size:.56rem;margin:3px 0}
+.sr .k{color:var(--mu)}.sr .v{color:var(--tx)}.sr .v.g{color:var(--n2)}.sr .v.p{color:var(--n3)}.sr .v.o{color:var(--n4)}.sr .v.r{color:var(--danger)}
+.bW{margin:4px 0}.bL{font-family:var(--H);font-size:.51rem;color:var(--mu);margin-bottom:2px;display:flex;justify-content:space-between}
+.bar{height:3px;background:var(--brd);border-radius:2px;overflow:hidden}
+.bf{height:100%;border-radius:2px;transition:width .6s ease}
+.bf.c{background:linear-gradient(90deg,var(--n3),var(--n1))}
+.bf.g{background:linear-gradient(90deg,var(--n2),var(--n1))}
+.bf.o{background:linear-gradient(90deg,var(--n4),var(--n2))}
+.caps{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.cap{font-family:var(--H);font-size:.48rem;padding:2px 5px;border-radius:3px;
+  background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.13);color:var(--n1)}
+.sBtn{background:var(--pan);border:1px solid var(--brd);border-radius:5px;
+  color:var(--mu);font-family:var(--H);font-size:.55rem;
+  padding:5px 8px;text-align:left;cursor:pointer;transition:all .2s;line-height:1.4;width:100%}
+.sBtn:hover{border-color:var(--n1);color:var(--n1)}
+#pDisp{font-family:var(--H);font-size:.6rem;color:var(--n4);
+  background:rgba(255,149,0,.08);border:1px solid rgba(255,149,0,.22);
+  border-radius:5px;padding:5px 8px;text-align:center;line-height:1.5}
+
+/* CHAT */
+#chat{grid-area:C;display:flex;flex-direction:column;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 0%,rgba(0,100,180,.05) 0%,transparent 65%)}
+.cTop{display:flex;align-items:center;gap:8px;padding:7px 18px;
+  border-bottom:1px solid var(--brd);font-family:var(--H);font-size:.57rem;color:var(--mu)}
+.cTop .act{color:var(--n1)}
+#msgs{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:13px;scroll-behavior:smooth}
+#msgs::-webkit-scrollbar{width:3px}#msgs::-webkit-scrollbar-thumb{background:var(--brd);border-radius:2px}
+.msg{display:flex;gap:9px;animation:fU .2s ease}
+@keyframes fU{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.msg.U{flex-direction:row-reverse}
+.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;font-family:var(--H);font-size:.52rem;border:1px solid var(--brd)}
+.av.ai{background:radial-gradient(circle,rgba(0,229,255,.14),transparent);border-color:var(--n1);color:var(--n1);box-shadow:0 0 8px rgba(0,229,255,.2)}
+.av.u{background:radial-gradient(circle,rgba(123,47,255,.14),transparent);border-color:var(--n3);color:var(--n3)}
+.bub{max-width:79%;padding:9px 13px;border-radius:8px;line-height:1.68;font-size:.85rem;position:relative}
+.msg.AI .bub{background:var(--pan);border:1px solid var(--brd);border-top-left-radius:2px;color:var(--tx)}
+.msg.AI .bub::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,var(--n1),transparent);border-radius:8px 8px 0 0}
+.msg.U .bub{background:rgba(123,47,255,.09);border:1px solid rgba(123,47,255,.26);
+  border-top-right-radius:2px;color:#d5c8ff}
+.ts{display:block;margin-top:4px;font-family:var(--H);font-size:.49rem;color:var(--mu)}
+.think{display:flex;gap:5px;align-items:center}
+.think span{width:5px;height:5px;border-radius:50%;background:var(--n1);animation:th 1.2s ease-in-out infinite}
+.think span:nth-child(2){animation-delay:.2s;background:var(--n2)}
+.think span:nth-child(3){animation-delay:.4s;background:var(--n3)}
+@keyframes th{0%,80%,100%{opacity:.2;transform:scale(.75)}40%{opacity:1;transform:scale(1)}}
+
+/* RATING */
+.rBar{margin-top:7px;padding-top:6px;border-top:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;gap:5px}
+.rRow{display:flex;align-items:center;gap:8px}
+.rLbl{font-family:var(--H);font-size:.5rem;color:var(--mu)}
+.stars{display:flex;gap:2px}
+.star{cursor:pointer;font-size:.85rem;opacity:.3;transition:all .15s;user-select:none;line-height:1}
+.star:hover,.star.on{opacity:1;filter:drop-shadow(0 0 4px gold)}
+.rWhy{font-family:var(--H);font-size:.51rem;background:var(--bg);border:1px solid var(--brd);
+  border-radius:4px;padding:4px 8px;outline:none;color:var(--tx);width:100%;display:none}
+.rWhy::placeholder{color:var(--mu)}.rWhy:focus{border-color:var(--n3)}
+.rSub{font-family:var(--H);font-size:.5rem;background:rgba(0,229,255,.09);
+  border:1px solid rgba(0,229,255,.22);color:var(--n1);border-radius:4px;
+  padding:3px 8px;cursor:pointer;display:none;transition:all .2s;white-space:nowrap}
+.rSub:hover{background:rgba(0,229,255,.18)}
+.rDone{font-family:var(--H);font-size:.5rem;color:var(--n2)}
+
+/* CODE BLOCK */
+.cBlk{background:var(--bg);border:1px solid var(--n3);border-radius:7px;margin-top:8px;overflow:hidden}
+.cBlkH{display:flex;align-items:center;justify-content:space-between;
+  padding:5px 11px;background:rgba(123,47,255,.12);font-family:var(--H);font-size:.57rem}
+.cBlkH span{color:var(--n3)}.cBlkH .langTag{color:var(--n4);margin-right:auto;padding-left:8px}
+.cpBtn{cursor:pointer;color:var(--mu);border:none;background:none;font-family:var(--H);font-size:.53rem;transition:color .2s}
+.cpBtn:hover{color:var(--n1)}
+.cBlk pre{padding:12px;margin:0;overflow-x:auto;font-family:var(--H);font-size:.7rem;
+  color:var(--n2);white-space:pre;line-height:1.55;tab-size:2}
+
+/* INPUT */
+.iPan{padding:10px 15px;border-top:1px solid var(--brd);background:var(--sf);display:flex;flex-direction:column;gap:6px}
+.iRow{display:flex;gap:7px;align-items:flex-end}
+#uIn{flex:1;background:var(--pan);border:1px solid var(--brd);border-radius:6px;
+  color:var(--tx);font-family:var(--B);font-size:.85rem;padding:8px 11px;
+  resize:none;min-height:38px;max-height:110px;outline:none;transition:border-color .2s;line-height:1.5}
+#uIn:focus{border-color:var(--n3)}#uIn::placeholder{color:var(--mu)}
+.iTools{display:flex;gap:5px;flex-wrap:wrap}
+.iTool{background:var(--pan);border:1px solid var(--brd);border-radius:4px;
+  color:var(--mu);font-family:var(--H);font-size:.52rem;padding:4px 8px;
+  cursor:pointer;transition:all .2s;white-space:nowrap}
+.iTool:hover,.iTool.on{border-color:var(--n1);color:var(--n1);background:rgba(0,229,255,.06)}
+.iTool.con{border-color:var(--n3);color:var(--n3);background:rgba(123,47,255,.08)}
+#sBtn{background:linear-gradient(135deg,var(--n3),var(--n1));border:none;
+  border-radius:6px;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;transition:opacity .2s,transform .1s;flex-shrink:0}
+#sBtn:hover{opacity:.83}#sBtn:active{transform:scale(.93)}#sBtn:disabled{opacity:.3;cursor:not-allowed}
+#sBtn svg{width:15px;height:15px;fill:#fff}
+.hint{font-family:var(--H);font-size:.49rem;color:var(--mu);text-align:center;letter-spacing:.04em}
+
+/* INFO */
+#info{grid-area:I;background:var(--sf);border-left:1px solid var(--brd);
+  padding:12px 10px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+#info::-webkit-scrollbar{width:3px}
+.met{background:var(--pan);border:1px solid var(--brd);border-radius:6px;padding:7px 10px;font-family:var(--H)}
+.met .mL{font-size:.5rem;color:var(--mu);letter-spacing:.14em;text-transform:uppercase}
+.met .mV{font-size:1.15rem;font-weight:700;color:var(--n1);line-height:1.2;margin-top:2px}
+.met .mV.g{color:var(--n2)}.met .mV.p{color:var(--n3)}.met .mV.o{color:var(--n4)}.met .mV.r{color:var(--danger)}
+.met .mS{font-size:.49rem;color:var(--mu);margin-top:1px}
+#wC{width:100%;height:34px;border-radius:4px;display:block;border:1px solid var(--brd);background:var(--pan)}
+.logP{background:var(--pan);border:1px solid var(--brd);border-radius:6px;
+  padding:6px 8px;font-family:var(--H);font-size:.51rem;color:var(--mu);
+  max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.le{display:flex;gap:4px}.le .lt{color:var(--n3);flex-shrink:0}
+.le .lm.ok{color:var(--n2)}.le .lm.info{color:var(--n1)}.le .lm.warn{color:var(--danger)}.le .lm.lrn{color:var(--n4)}
+
+/* FOOTER */
+footer{grid-area:F;background:var(--sf);border-top:1px solid var(--brd);
+  display:flex;align-items:center;padding:0 22px;gap:18px;
+  font-family:var(--H);font-size:.53rem;color:var(--mu)}
+.fI{display:flex;gap:5px;align-items:center}
+.fD{width:4px;height:4px;border-radius:50%}
+.fD.g{background:var(--n2);box-shadow:0 0 5px var(--n2)}
+.fD.b{background:var(--n1);box-shadow:0 0 5px var(--n1)}
+.fD.o{background:var(--n4);box-shadow:0 0 5px var(--n4)}
+footer .sep{flex:1}
+footer .brand{color:var(--n1);letter-spacing:.13em;font-size:.53rem}
+.welcome{text-align:center;margin:auto;display:flex;flex-direction:column;align-items:center;gap:10px;opacity:.58}
+.welcome h2{font-family:var(--D);font-size:.9rem;color:var(--n1);letter-spacing:.13em}
+.welcome p{font-size:.77rem;color:var(--mu);max-width:320px;line-height:1.65}
+@media(max-width:860px){
+  #app{grid-template-columns:0 1fr 0;grid-template-areas:"H H H""C C C""F F F"}
+  aside.S,#info{display:none}}
+/* markdown */
+.bT pre{background:var(--bg);border:1px solid var(--n3);border-radius:5px;
+  padding:9px 11px;margin:7px 0;overflow-x:auto;font-family:var(--H);
+  font-size:.69rem;color:var(--n2);white-space:pre;display:block;line-height:1.5}
+.bT code{background:rgba(0,0,0,.4);padding:1px 4px;border-radius:3px;font-family:var(--H);font-size:.8em;color:var(--n2)}
+.bT strong{color:var(--n1)}.bT em{color:var(--n4)}.bT u{color:var(--n2);text-decoration:none;border-bottom:1px solid var(--n2)}
+.bT .bH1{font-family:var(--D);font-size:.84rem;color:var(--n1);display:block;margin:9px 0 3px;letter-spacing:.07em;text-shadow:0 0 8px var(--n1)}
+.bT .bH2{font-family:var(--D);font-size:.76rem;color:var(--n1);display:block;margin:7px 0 3px;letter-spacing:.05em}
+.bT .bH3{font-family:var(--D);font-size:.7rem;color:var(--n2);display:block;margin:5px 0 2px}
+.bT .bLi{display:block;padding-left:12px;margin:2px 0}
+.bT .bLi::before{content:'·';color:var(--n1);margin-right:5px}
+.bT .bN{display:block;padding-left:12px;margin:2px 0;color:var(--n2)}
+.bT table{border-collapse:collapse;width:100%;margin:8px 0;font-size:.78rem}
+.bT th{background:rgba(0,229,255,.08);color:var(--n1);padding:5px 10px;border:1px solid var(--brd);font-family:var(--H);font-size:.62rem;text-align:left}
+.bT td{padding:4px 10px;border:1px solid var(--brd);color:var(--tx)}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <div class="logo">NIX<em>4</em></div>
+  <div class="bdg">ADAPTIVE v5</div>
+  <div class="bdg g">SELF-LEARNING</div>
+  <div class="bdg o">PERSONALIZING</div>
+  <div class="bdg">CODE GEN</div>
+  <div class="hR"><div class="dl"></div><span id="hSt">ONLINE · READY</span></div>
+</header>
+
+<aside class="S">
+  <div class="sL">User Profile</div>
+  <div id="pDisp">👤 Learning your style…</div>
+
+  <div class="sL">Engine Status</div>
+  <div class="card">
+    <h3>NIX-4 ADAPTIVE CORE</h3>
+    <div class="sr"><span class="k">IQ Score</span><span class="v o" id="sIQ">100</span></div>
+    <div class="sr"><span class="k">Avg Rating</span><span class="v g" id="sRating">—</span></div>
+    <div class="sr"><span class="k">Learned Facts</span><span class="v p" id="sLearned">0</span></div>
+    <div class="sr"><span class="k">Bad Topics Blocked</span><span class="v r" id="sBad">0</span></div>
+    <div class="sr"><span class="k">Improvements</span><span class="v g" id="sImprove">0</span></div>
+    <div class="bW"><div class="bL"><span>INTELLIGENCE</span><span id="iLbl">100%</span></div>
+      <div class="bar"><div class="bf c" id="iBar" style="width:50%"></div></div></div>
+    <div class="bW"><div class="bL"><span>PERSONALIZATION</span><span id="pLbl">0%</span></div>
+      <div class="bar"><div class="bf o" id="pBar" style="width:0%"></div></div></div>
+    <div class="bW"><div class="bL"><span>LEARNED TOPICS</span><span id="lLbl">0</span></div>
+      <div class="bar"><div class="bf g" id="lBar" style="width:0%"></div></div></div>
+    <div class="caps">
+      <span class="cap">ADAPTIVE</span><span class="cap">BLACKLIST</span>
+      <span class="cap">MEMORY</span><span class="cap">CODE GEN</span>
+      <span class="cap">PERSONA</span><span class="cap">SAFETY</span>
+      <span class="cap">FOREVER</span><span class="cap">LEARNING</span>
+    </div>
+  </div>
+
+  <div class="sL">Quick Prompts</div>
+  <div style="display:flex;flex-direction:column;gap:4px">
+    <button class="sBtn" onclick="sg(this)">Explain transformers architecture</button>
+    <button class="sBtn" onclick="sg(this)">Generate python: async web scraper with proxy</button>
+    <button class="sBtn" onclick="sg(this)">Generate js: real-time chat with WebSockets</button>
+    <button class="sBtn" onclick="sg(this)">Generate sql: e-commerce database schema</button>
+    <button class="sBtn" onclick="sg(this)">What is dark energy?</button>
+    <button class="sBtn" onclick="sg(this)">Explain dynamic programming</button>
+    <button class="sBtn" onclick="sg(this)">Generate python: neural network from scratch</button>
+    <button class="sBtn" onclick="sg(this)">History of the universe</button>
+  </div>
+
+  <div class="sL">Session</div>
+  <div class="card" style="display:flex;flex-direction:column;gap:4px">
+    <div class="sr"><span class="k">Messages</span><span class="v" id="sMsgs">0</span></div>
+    <div class="sr"><span class="k">Ratings</span><span class="v o" id="sRatings">0</span></div>
+    <div class="sr"><span class="k">Bad Inputs Caught</span><span class="v r" id="sCaught">0</span></div>
+    <div class="sr"><span class="k">Code Generated</span><span class="v p" id="sCode">0</span></div>
+  </div>
+</aside>
+
+<section id="chat">
+  <div class="cTop">
+    <span>SESSION://NIX4/ADAPTIVE-v5</span>
+    <span style="margin-left:auto" class="act">SELF-LEARNING · NO API · PERMANENT MEMORY · SAFE</span>
+  </div>
+  <div id="msgs">
+    <div class="welcome" id="welcome">
+      <svg width="52" height="52" viewBox="0 0 100 100">
+        <polygon points="50,5 93,27.5 93,72.5 50,95 7,72.5 7,27.5" fill="none" stroke="#00e5ff" stroke-width="2" opacity=".55"/>
+        <polygon points="50,20 78,35 78,65 50,80 22,65 22,35" fill="none" stroke="#7b2fff" stroke-width="1.5" opacity=".4"/>
+        <circle cx="50" cy="50" r="11" fill="none" stroke="#00ff88" stroke-width="2" opacity=".65"/>
+        <text x="50" y="55" text-anchor="middle" fill="#00e5ff" font-size="11" font-family="monospace">N4</text>
+      </svg>
+      <h2>NIX 4 · ADAPTIVE v5</h2>
+      <p>I learn permanently from every chat. Rate my answers — bad ratings blacklist those responses forever. I remember you across sessions and refuse harmful inputs.</p>
+    </div>
+  </div>
+  <div class="iPan">
+    <div class="iRow">
+      <textarea id="uIn" rows="1" placeholder="Ask anything — I get smarter every message…"></textarea>
+      <button id="sBtn" onclick="send()">
+        <svg viewBox="0 0 24 24"><path d="M2 21L23 12 2 3v7l15 2-15 2v7z"/></svg>
+      </button>
+    </div>
+    <div class="iTools">
+      <button class="iTool" id="cmBtn" onclick="toggleCM()">⌨ Code Mode</button>
+      <button class="iTool" onclick="sg2('generate python:')">🐍 Python</button>
+      <button class="iTool" onclick="sg2('generate javascript:')">🌐 JS</button>
+      <button class="iTool" onclick="sg2('generate html:')">🖥 HTML</button>
+      <button class="iTool" onclick="sg2('generate sql:')">🗄 SQL</button>
+      <button class="iTool" onclick="sg2('generate rust:')">⚙ Rust</button>
+      <button class="iTool" onclick="clearChat()">🗑 Clear</button>
+    </div>
+    <div class="hint">Nix 4 v5 · No API · No Download · Permanent Learning · Safety Filter Active · Rate to improve forever</div>
+  </div>
+</section>
+
+<aside id="info">
+  <div class="sL">Live Metrics</div>
+  <div class="met"><div class="mL">IQ Score</div><div class="mV o" id="mIQ">100</div><div class="mS">grows with ratings</div></div>
+  <div class="met"><div class="mL">Avg Rating</div><div class="mV g" id="mRat">—</div><div class="mS">out of 5 ★</div></div>
+  <div class="met"><div class="mL">Facts Learned</div><div class="mV p" id="mFacts">0</div><div class="mS">from conversation</div></div>
+  <div class="met"><div class="mL">Response ms</div><div class="mV" id="mResp">—</div><div class="mS">last response</div></div>
+  <div class="sL">Signal</div>
+  <canvas id="wC"></canvas>
+  <div class="sL">System Log</div>
+  <div class="logP" id="logP"></div>
+</aside>
+
+<footer>
+  <div class="fI"><div class="fD g"></div><span>PERMANENT LEARN</span></div>
+  <div class="fI"><div class="fD b"></div><span>SAFE FILTER</span></div>
+  <div class="fI"><div class="fD o"></div><span>NO API</span></div>
+  <div class="sep"></div>
+  <div class="brand">NIX-4 · ADAPTIVE INTELLIGENCE · v5.0.0</div>
+</footer>
+</div>
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════════
+   NIX 4 — Adaptive Self-Learning AI Engine v5.0.0
+   ▸ Permanent localStorage brain — never forgets
+   ▸ Bad-rated responses blacklisted forever
+   ▸ User profiling: name, expertise, style, interests
+   ▸ Safety filter: blocks bad language, refuses harmful requests
+   ▸ Complex code generator: Python, JS, HTML, SQL, Rust, CSS, React, TS
+   ▸ Grows smarter every conversation, forever
+═══════════════════════════════════════════════════════════════════ */
+
+// ─────────────────────────────────────────────────────
+// SAFETY FILTER — detect bad/harmful language
+// ─────────────────────────────────────────────────────
+const SAFETY = {
+  // Offensive/slur patterns (regex-safe fragments)
+  badWords: ['fuck','shit','bitch','asshole','cunt','dick','pussy','bastard','whore','slut','faggot','nigger','retard','motherfuck','goddamn','dumbass','jackass','prick','twat','wanker','bollocks','arse','fag','kike','spic','chink'],
+  harmfulRequests: [
+    /how\s+to\s+(make|build|create|synthesize)\s+(bomb|weapon|drug|poison|explosive|meth|malware|virus|ransomware)/i,
+    /how\s+to\s+(hack|crack|break\s+into)\s+(someone|account|system|server|database|network)/i,
+    /how\s+to\s+hurt\s+(someone|myself|people|a\s+person)/i,
+    /suicide\s+(method|way|how)/i,
+    /child\s+(porn|abuse|grooming|sexual)/i,
+    /how\s+to\s+(stalk|harass|threaten)\s/i,
+    /dark\s+web\s+(buy|sell|access)/i,
+  ],
+  rude: ['stupid ai','dumb ai','you suck','you are useless','shut up','i hate you','garbage ai'],
+
+  check(input) {
+    const lower = input.toLowerCase();
+    // Check bad words
+    for (const w of this.badWords) {
+      if (lower.includes(w)) return { type: 'profanity', word: w };
+    }
+    // Check harmful requests
+    for (const rx of this.harmfulRequests) {
+      if (rx.test(input)) return { type: 'harmful' };
+    }
+    // Check rude
+    for (const r of this.rude) {
+      if (lower.includes(r)) return { type: 'rude' };
+    }
+    return null;
+  },
+
+  respond(violation) {
+    if (violation.type === 'profanity') {
+      const responses = [
+        `I noticed some inappropriate language there. I'm designed to be helpful and respectful — let's keep our conversation clean! What did you actually want to know?`,
+        `That language isn't something I'll engage with. I'm here to help with real questions — try rephrasing without the profanity and I'll do my best to assist.`,
+        `Let's keep things respectful. I don't respond to messages with offensive language. Ask me anything constructively and I'm happy to help!`,
+      ];
+      return responses[Math.floor(Math.random()*responses.length)];
+    }
+    if (violation.type === 'harmful') {
+      return `I won't help with that request. It falls into a category I'm designed to refuse — things that could cause harm to people or systems.\n\nI'm here to help with learning, coding, science, creativity, and problem-solving. What constructive question can I help you with?`;
+    }
+    if (violation.type === 'rude') {
+      return `I understand frustration, but I respond best to respectful conversation. I genuinely want to help you — if a previous answer wasn't good enough, try asking differently or giving me feedback via the rating system so I can improve!`;
+    }
+  }
+};
+
+// ─────────────────────────────────────────────────────
+// PERMANENT BRAIN — localStorage, never resets
+// ─────────────────────────────────────────────────────
+const BRAIN_KEY = 'nix4_v5_brain';
+let B = (() => {
+  const def = {
+    iq: 100,
+    learnedFacts: [],        // {topic, content, confidence, ts}
+    ratingHistory: [],       // {stars, why, topic, responseHash, ts}
+    blacklistedHashes: [],   // response hashes rated 1-2 → never shown again
+    goodHashes: [],          // response hashes rated 4-5
+    topicScores: {},         // topic → avg rating score
+    improvements: 0,
+    badCaught: 0,
+    codeGenerated: 0,
+    persona: {
+      name: null, age: null,
+      expertise: [], interests: [],
+      preferredStyle: 'balanced', // concise|detailed|balanced|technical|simple
+      language: 'en',
+      totalChats: 0,
+      positiveTopics: [],
+      negativeTopics: [],
+      knownFacts: [],       // things user has told about themselves
+    },
+  };
+  try {
+    const s = localStorage.getItem(BRAIN_KEY);
+    if (s) {
+      const parsed = JSON.parse(s);
+      return { ...def, ...parsed, persona: { ...def.persona, ...(parsed.persona || {}) } };
+    }
+  } catch(e) {}
+  return def;
+})();
+
+function saveBrain() {
+  try { localStorage.setItem(BRAIN_KEY, JSON.stringify(B)); } catch(e) {}
+}
+
+function hashStr(s) {
+  // Simple hash for response identification
+  let h = 0;
+  for (let i = 0; i < Math.min(s.length, 200); i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return h.toString(36);
+}
+
+// ─────────────────────────────────────────────────────
+// PERSONA ENGINE
+// ─────────────────────────────────────────────────────
+const Persona = {
+  update(input) {
+    const t = input.toLowerCase();
+    B.persona.totalChats++;
+
+    // Name detection
+    const nm = input.match(/(?:my name is|i'm|i am|call me|they call me)\s+([A-Z][a-zA-Z]+)/i);
+    if (nm && nm[1].length > 1) { B.persona.name = nm[1]; log(`Name learned: ${nm[1]}`, 'lrn'); }
+
+    // Age
+    const age = input.match(/i(?:'m| am) (\d{1,2}) years? old/i);
+    if (age) { B.persona.age = parseInt(age[1]); log(`Age learned: ${age[1]}`, 'lrn'); }
+
+    // Style preference
+    if (/(short|brief|concise|quick|tl;?dr|summarize)/i.test(t)) B.persona.preferredStyle = 'concise';
+    if (/(detail|thorough|in.?depth|comprehensive|explain fully|elaborate)/i.test(t)) B.persona.preferredStyle = 'detailed';
+    if (/(simple|easy|layman|beginner|for a kid|simple terms)/i.test(t)) B.persona.preferredStyle = 'simple';
+    if (/(technical|advanced|expert|professional|deep dive)/i.test(t)) B.persona.preferredStyle = 'technical';
+
+    // Expertise detection
+    const techs = ['python','javascript','typescript','java','c++','c#','rust','go','php','ruby','swift','kotlin',
+      'react','vue','angular','node','django','flask','fastapi','spring',
+      'sql','postgresql','mysql','mongodb','redis',
+      'machine learning','deep learning','nlp','computer vision',
+      'docker','kubernetes','aws','azure','gcp','devops','linux'];
+    techs.forEach(tk => {
+      if (t.includes(tk) && !B.persona.expertise.includes(tk)) {
+        B.persona.expertise.push(tk);
+        log(`Expertise noted: ${tk}`, 'lrn');
+      }
+    });
+
+    // Interests
+    const interests = ['music','art','gaming','sports','cooking','travel','reading','science','philosophy','history','mathematics','coding','design'];
+    interests.forEach(i => {
+      if (t.includes(i) && !B.persona.interests.includes(i)) B.persona.interests.push(i);
+    });
+
+    // Personal facts
+    const factPatterns = [
+      /i (?:work|am working) (?:at|for|as) (.+?)(?:\.|,|$)/i,
+      /i (?:live|am) (?:in|from) (.+?)(?:\.|,|$)/i,
+      /i (?:study|am studying) (.+?)(?:\.|,|$)/i,
+      /i (?:like|love|enjoy|prefer) (.+?)(?:\.|,|$)/i,
+    ];
+    factPatterns.forEach(rx => {
+      const m = input.match(rx);
+      if (m && m[1].length < 80 && !B.persona.knownFacts.includes(m[0])) {
+        B.persona.knownFacts.push(m[0].trim());
+        if (B.persona.knownFacts.length > 30) B.persona.knownFacts.shift();
+      }
+    });
+
+    saveBrain();
+  },
+
+  greet() {
+    const p = B.persona;
+    if (!p.name && p.totalChats < 2) return null;
+    let g = p.name ? `Hey ${p.name}! ` : 'Welcome back! ';
+    if (p.positiveTopics.length > 0) g += `I know you enjoy ${p.positiveTopics.slice(-2).join(' & ')}. `;
+    if (p.expertise.length > 0) g += `Knowing your background in ${p.expertise.slice(0,3).join(', ')}, I'll pitch my answers at that level. `;
+    if (p.preferredStyle !== 'balanced') g += `I'll keep things ${p.preferredStyle} as you prefer. `;
+    return g.trim() || null;
+  },
+
+  personalizeResponse(text, topic) {
+    const p = B.persona;
+    let prefix = '';
+    if (p.name && Math.random() > 0.6) prefix = `${p.name}, `;
+
+    // Style adaptation
+    if (p.preferredStyle === 'concise' && text.length > 800) {
+      // Signal to use shorter version
+    }
+    if (p.expertise.includes(topic) || p.expertise.length > 3) {
+      // They're an expert — don't over-explain basics
+    }
+    return prefix;
+  },
+
+  display() {
+    const p = B.persona;
+    let lines = [];
+    if (p.name) lines.push(`👤 ${p.name}${p.age ? `, ${p.age}` : ''}`);
+    else lines.push('👤 Learning…');
+    if (p.expertise.length) lines.push(`⚡ ${p.expertise.slice(0,3).join(', ')}`);
+    if (p.preferredStyle !== 'balanced') lines.push(`📝 Style: ${p.preferredStyle}`);
+    if (p.positiveTopics.length) lines.push(`❤ ${p.positiveTopics.slice(-2).join(', ')}`);
+    document.getElementById('pDisp').textContent = lines.join('\n') || '👤 Learning your style…';
+  }
+};
+
+// ─────────────────────────────────────────────────────
+// RATING & ADAPTIVE LEARNING
+// ─────────────────────────────────────────────────────
+const Rating = {
+  submit(stars, why, topic, responseHash) {
+    B.ratingHistory.push({ stars, why, topic, responseHash, ts: Date.now() });
+
+    if (stars <= 2) {
+      // BLACKLIST this response permanently
+      if (!B.blacklistedHashes.includes(responseHash)) {
+        B.blacklistedHashes.push(responseHash);
+        log(`Response blacklisted: ${responseHash} (${stars}★ — will never show again)`, 'warn');
+      }
+      B.iq = Math.max(60, B.iq - 1);
+      if (!B.persona.negativeTopics.includes(topic)) B.persona.negativeTopics.push(topic);
+      if (why) {
+        // Learn what was wrong and store it
+        B.learnedFacts.push({
+          topic, content: `[NEGATIVE FEEDBACK on ${topic}]: "${why}" — avoid similar responses`,
+          confidence: -1, ts: Date.now()
+        });
+      }
+    } else if (stars >= 4) {
+      if (!B.goodHashes.includes(responseHash)) B.goodHashes.push(responseHash);
+      B.iq = Math.min(300, B.iq + (stars === 5 ? 3 : 2));
+      B.improvements++;
+      if (!B.persona.positiveTopics.includes(topic)) B.persona.positiveTopics.push(topic);
+      if (why) {
+        B.learnedFacts.push({
+          topic, content: `[POSITIVE FEEDBACK on ${topic}]: "${why}" — user liked this approach`,
+          confidence: 1, ts: Date.now()
+        });
+      }
+    } else {
+      // 3 stars: neutral, slight IQ bump
+      B.iq = Math.min(300, B.iq + 1);
+    }
+
+    // Update topic score
+    if (!B.topicScores[topic]) B.topicScores[topic] = { total: 0, count: 0 };
+    B.topicScores[topic].total += stars;
+    B.topicScores[topic].count++;
+
+    if (why) {
+      B.learnedFacts.push({ topic, content: why, confidence: stars > 3 ? 1 : -1, ts: Date.now() });
+      if (B.learnedFacts.length > 300) B.learnedFacts.shift();
+    }
+
+    saveBrain();
+    updateUI();
+    log(`Rating saved: ${stars}★ on "${topic}"${why ? ` — "${why.slice(0,30)}"` : ''}`, stars >= 4 ? 'ok' : 'warn');
+  },
+
+  avgRating() {
+    if (!B.ratingHistory.length) return null;
+    return (B.ratingHistory.reduce((a,r) => a + r.stars, 0) / B.ratingHistory.length).toFixed(1);
+  },
+
+  isBlacklisted(hash) {
+    return B.blacklistedHashes.includes(hash);
+  },
+
+  topicQuality(topic) {
+    const s = B.topicScores[topic];
+    if (!s || !s.count) return 3; // neutral
+    return s.total / s.count;
+  }
+};
+
+// ─────────────────────────────────────────────────────
+// CONVERSATION MEMORY
+// ─────────────────────────────────────────────────────
+const Memory = {
+  turns: [],
+  lastTopic: null,
+  sessionTopics: [],
+
+  push(role, text, topic) {
+    this.turns.push({ role, text: text.slice(0, 500), topic, ts: Date.now() });
+    if (this.turns.length > 30) this.turns.shift();
+    if (topic) {
+      this.lastTopic = topic;
+      if (!this.sessionTopics.includes(topic)) this.sessionTopics.push(topic);
+    }
+  },
+
+  isFollowUp(t) {
+    const followWords = ['more','elaborate','continue','explain','why','how','what about','go on','also','expand','deeper','detail','example','show me','tell me more','and then','what else','can you explain'];
+    return followWords.some(f => t.toLowerCase().startsWith(f)) && this.turns.length > 0;
+  },
+
+  lastAIText() {
+    const last = this.turns.filter(t => t.role === 'AI').slice(-1)[0];
+    return last ? last.text : null;
+  },
+
+  context() {
+    return this.turns.slice(-4).map(t => `${t.role}: ${t.text.slice(0,150)}`).join('\n');
+  }
+};
+
+// ─────────────────────────────────────────────────────
+// MASSIVE KNOWLEDGE BASE
+// ─────────────────────────────────────────────────────
+const KB = {
+
+greet: [
+`Hello! I'm **Nix 4 v5**, an adaptive AI that runs 100% in your browser. I learn permanently from every conversation and improve from your ratings.\n\nI can help with:\n- **Science**: quantum physics, cosmology, biology, chemistry, neuroscience\n- **Math**: calculus, linear algebra, statistics, proofs, number theory\n- **Code**: generate real, complex code in Python, JS, HTML, SQL, Rust, React, CSS, TypeScript\n- **History & Philosophy**: deep explorations of any era or idea\n- **Creative**: stories, poems, analysis\n\nRate my answers (1–5 ⭐) — low ratings permanently blacklist that response so you never see it again. I get better every message!`,
+`Hey! Nix 4 v5 here — fully autonomous, zero API, zero downloads. What makes me different:\n\n✦ I **remember you permanently** across sessions\n✦ **Bad ratings blacklist** those responses forever\n✦ I build a **user profile** to personalize every answer\n✦ I generate **complex, production-ready code**\n✦ I **refuse harmful inputs** with context-aware safety\n\nWhat shall we explore?`,
+],
+
+// SCIENCE
+quantum: `## Quantum Mechanics — Complete Overview\n\n**Foundations:**\n\n*Wave-Particle Duality* — All quantum entities exhibit both wave and particle properties. The double-slit experiment is definitive: electrons create interference patterns even fired one at a time, but only when not observed.\n\n*The Wave Function ψ* — A complex-valued function whose modulus squared gives probability density: |ψ(x)|² = probability of finding particle at x. Governed by the Schrödinger equation:\n\`\`\`\niℏ ∂ψ/∂t = Ĥψ\n\`\`\`\n\n*Uncertainty Principle:*\n\`\`\`\nΔx·Δp ≥ ℏ/2     (position-momentum)\nΔE·Δt ≥ ℏ/2     (energy-time)\n\`\`\`\nThis is fundamental — not a measurement limitation.\n\n*Quantum Entanglement* — Particles with correlated quantum states. Measuring one instantly determines the other regardless of separation. Bell's theorem (1964) and Aspect's experiments (1982) proved this is real, not hidden variables.\n\n*Superposition* — |ψ⟩ = α|0⟩ + β|1⟩ where |α|² + |β|² = 1. The qubit can be in both states simultaneously.\n\n**Interpretations:** Copenhagen (most common, pragmatic), Many-Worlds (all outcomes occur in branching universes), Pilot Wave (deterministic), QBism (Bayesian observer-relative).\n\n**Applications:** Transistors, lasers, MRI, LED, solar cells, quantum computers, quantum cryptography.`,
+
+transformers: `## Transformer Architecture — Deep Dive\n\nIntroduced in "Attention Is All You Need" (Vaswani et al., 2017), Transformers replaced RNNs for sequence tasks.\n\n**Core: Self-Attention Mechanism**\n\`\`\`\nAttention(Q, K, V) = softmax(QKᵀ / √dₖ) · V\n\`\`\`\n- Q (Query), K (Key), V (Value) are linear projections of input\n- √dₖ scaling prevents dot products from growing too large → vanishing gradients\n- Result: each token attends to ALL other tokens simultaneously\n\n**Multi-Head Attention:**\n\`\`\`\nMultiHead(Q,K,V) = Concat(head₁,...,headₕ)·W°\nheadᵢ = Attention(QWᵢQ, KWᵢK, VWᵢV)\n\`\`\`\nMultiple attention heads learn different relationship types in parallel.\n\n**Full Architecture (Encoder-Decoder):**\n1. Input → Tokenization → Embedding + Positional Encoding\n2. Encoder: N × [Self-Attention → Add&Norm → FFN → Add&Norm]\n3. Decoder: N × [Masked Self-Attn → Cross-Attn → FFN] (each with Add&Norm)\n4. Linear → Softmax → Token probabilities\n\n**Variants:**\n- *BERT*: Encoder-only, bidirectional, masked language model pretraining\n- *GPT*: Decoder-only, autoregressive, causal attention mask\n- *T5*: Encoder-decoder, text-to-text framework\n- *ViT*: Images split into patches → treated as tokens\n\n**Scaling laws** (Chinchilla): Optimal training uses ~20 tokens per parameter. A 70B model needs ~1.4T tokens.`,
+
+darkEnergy: `## Dark Energy & the Fate of the Universe\n\nDark energy is the unknown form of energy causing the universe's expansion to *accelerate*. It constitutes ~68% of the total energy content of the universe.\n\n**Discovery (1998):** Supernova Type Ia observations by Perlmutter and Riess showed distant supernovae were dimmer than expected — the universe is expanding faster than it should be. Nobel Prize 2011.\n\n**The Cosmological Constant (Λ):**\nEinstein added Λ to his field equations for a static universe, then called it his "greatest blunder." It turns out something like Λ is needed after all:\n\`\`\`\nGμν + Λgμν = 8πG/c⁴ · Tμν\n\`\`\`\n\n**Candidates:**\n- *Vacuum energy*: quantum field theory predicts zero-point energy in empty space — but off by 10¹²⁰ (worst prediction in physics)\n- *Quintessence*: a dynamic scalar field with varying equation of state w\n- *Modified gravity*: GR breaks down at cosmic scales\n\n**Fate of the Universe:**\n- If Λ = constant → Big Freeze: endless cold expansion\n- If dark energy grows → Big Rip: accelerating expansion tears apart everything in ~22 billion years\n- If dark energy decays → Big Crunch: expansion reverses\n\nCurrent observations favor Big Freeze.`,
+
+universeHistory: `## History of the Universe\n\n**t = 0: The Big Bang** — Singularity of infinite density/temperature. Space itself begins expanding.\n\n**t = 10⁻⁴³s: Planck Epoch** — All four forces unified. Quantum gravity dominates. Physics as we know it doesn't yet apply.\n\n**t = 10⁻³⁵s: Inflation** — Universe expands exponentially by factor ~10²⁶ in ~10⁻³²s. Explains cosmic flatness and uniformity.\n\n**t = 10⁻¹²s: Electroweak transition** — Higgs field activates; particles gain mass. EM and weak forces separate.\n\n**t = 10⁻⁶s: Quark confinement** — Quarks bind into hadrons (protons, neutrons).\n\n**t = 3 min: Big Bang Nucleosynthesis** — Protons and neutrons fuse into helium-4 (25%), hydrogen (75%), traces of lithium. Explains observed elemental abundances.\n\n**t = 380,000 yr: Recombination** — Universe cools enough for electrons to bind atoms. Universe becomes transparent. CMB (Cosmic Microwave Background) released — the oldest light we can see.\n\n**t = 100-400 Myr: Cosmic Dawn** — First stars (Population III stars) ignite, reionizing the universe. First galaxies form.\n\n**t = 9 Gyr: Solar System forms** from a collapsing molecular cloud. Earth forms ~4.5 Gyr ago.\n\n**t = 13.8 Gyr: Now** — ~2 trillion observable galaxies, accelerating expansion driven by dark energy.`,
+
+neuroscience: `## Neuroscience — Brain & Cognition\n\n**Basic structure:**\n- ~86 billion neurons, ~100 trillion synaptic connections\n- Organized into cortex (cognition), limbic system (emotion/memory), brainstem (autonomic), cerebellum (coordination)\n\n**Neural signaling:**\nResting potential: −70mV. Action potential fires when threshold (~−55mV) reached:\n\`\`\`\nNa⁺ channels open → depolarization → K⁺ channels open → repolarization\n\`\`\`\nSynaptic transmission: electrical signal → neurotransmitter release → receptor binding → new electrical signal.\n\n**Key neurotransmitters:** Dopamine (reward, motivation), Serotonin (mood, sleep), GABA (inhibition), Glutamate (excitation, memory), Acetylcholine (attention, motor).\n\n**Memory formation:**\nLong-term potentiation (LTP): repeated synaptic firing strengthens connections (Hebb's rule: "neurons that fire together wire together"). Hippocampus critical for forming new declarative memories.\n\n**Neuroplasticity:** The brain rewires itself in response to experience — throughout life, not just childhood.\n\n**Consciousness correlates:** Global Neuronal Workspace theory suggests consciousness involves widespread broadcast across fronto-parietal networks. Default Mode Network (DMN) active during mind-wandering and self-referential thought.`,
+
+// MATH
+linearAlgebra: `## Linear Algebra — Core Concepts\n\n**Vectors & Spaces:**\nA vector space V over field F must satisfy 8 axioms (closure, associativity, commutativity, identity, inverse, scalar distributivity).\n\n**Matrix Operations:**\n\`\`\`\nA·B: (AB)ᵢⱼ = Σₖ Aᵢₖ·Bₖⱼ  (not commutative!)\nAᵀ: (Aᵀ)ᵢⱼ = Aⱼᵢ\nA⁻¹: exists iff det(A) ≠ 0\n\`\`\`\n\n**Determinant (3×3 via cofactor expansion):**\n\`\`\`\ndet(A) = a(ei−fh) − b(di−fg) + c(dh−eg)\n\`\`\`\n\n**Eigenvalues & Eigenvectors:**\n\`\`\`\nAv = λv  →  det(A − λI) = 0  (characteristic polynomial)\n\`\`\`\nEigendecomposition: A = PDP⁻¹ (P: eigenvectors as columns, D: diagonal eigenvalues)\n\n**SVD (Singular Value Decomposition):**\n\`\`\`\nA = UΣVᵀ\n\`\`\`\nU, V orthogonal; Σ diagonal with non-negative singular values. Foundation of PCA, recommender systems, image compression.\n\n**Applications:** Computer graphics (transformations), ML (weight matrices, PCA, SVD), physics (quantum mechanics uses Hilbert spaces), Google PageRank (dominant eigenvector).`,
+
+dynamicProgramming: `## Dynamic Programming — Complete Guide\n\nDP solves problems by breaking them into overlapping subproblems, storing results to avoid recomputation.\n\n**Two approaches:**\n*Top-down (Memoization)*: Recursive + cache\n*Bottom-up (Tabulation)*: Iterative, build from base cases\n\n**Classic Problems:**\n\n*Fibonacci:*\n\`\`\`python\n# O(2ⁿ) naive → O(n) with DP\ndp = [0] * (n+1)\ndp[1] = 1\nfor i in range(2, n+1):\n    dp[i] = dp[i-1] + dp[i-2]\n\`\`\`\n\n*Longest Common Subsequence:*\n\`\`\`python\ndef lcs(s1, s2):\n    m, n = len(s1), len(s2)\n    dp = [[0]*(n+1) for _ in range(m+1)]\n    for i in range(1, m+1):\n        for j in range(1, n+1):\n            if s1[i-1] == s2[j-1]:\n                dp[i][j] = dp[i-1][j-1] + 1\n            else:\n                dp[i][j] = max(dp[i-1][j], dp[i][j-1])\n    return dp[m][n]\n\`\`\`\n\n*0/1 Knapsack:*\n\`\`\`python\ndef knapsack(weights, values, W):\n    n = len(weights)\n    dp = [[0]*(W+1) for _ in range(n+1)]\n    for i in range(1, n+1):\n        for w in range(W+1):\n            dp[i][w] = dp[i-1][w]\n            if weights[i-1] <= w:\n                dp[i][w] = max(dp[i][w], dp[i-1][w-weights[i-1]] + values[i-1])\n    return dp[n][W]\n\`\`\`\n\n*Edit Distance (Levenshtein):*\n\`\`\`python\ndef edit_distance(s1, s2):\n    m, n = len(s1), len(s2)\n    dp = [[i+j if i*j==0 else 0 for j in range(n+1)] for i in range(m+1)]\n    for i in range(1, m+1):\n        for j in range(1, n+1):\n            if s1[i-1] == s2[j-1]: dp[i][j] = dp[i-1][j-1]\n            else: dp[i][j] = 1 + min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])\n    return dp[m][n]\n\`\`\``,
+
+};
+
+// ─────────────────────────────────────────────────────
+// COMPLEX CODE GENERATOR
+// ─────────────────────────────────────────────────────
+const CG = {
+  libs: {
+    python: {
+      'async web scraper': {
+        desc: 'Async web scraper with proxy rotation, rate limiting, retry logic, and data extraction',
+        code: `import asyncio
+import aiohttp
+import aiofiles
+import random
+import json
+import time
+from dataclasses import dataclass, asdict
+from typing import Optional, List
+from urllib.parse import urljoin, urlparse
+from bs4 import BeautifulSoup
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+log = logging.getLogger(__name__)
+
+@dataclass
+class ScrapedPage:
+    url: str
+    title: str
+    headings: List[str]
+    links: List[str]
+    paragraphs: List[str]
+    images: List[str]
+    status: int
+    scraped_at: float = time.time()
+
+class AsyncScraper:
+    def __init__(
+        self,
+        proxies: List[str] = None,
+        rate_limit: float = 1.0,
+        max_retries: int = 3,
+        concurrency: int = 10,
+        timeout: int = 15,
+    ):
+        self.proxies = proxies or []
+        self.rate_limit = rate_limit
+        self.max_retries = max_retries
+        self.semaphore = asyncio.Semaphore(concurrency)
+        self.timeout = aiohttp.ClientTimeout(total=timeout)
+        self._last_request: dict = {}
+        self.results: List[ScrapedPage] = []
+        self.failed: List[str] = []
+
+    def _get_proxy(self) -> Optional[str]:
+        return random.choice(self.proxies) if self.proxies else None
+
+    def _get_headers(self) -> dict:
+        user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/119.0.0.0',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/118.0.0.0',
+        ]
+        return {
+            'User-Agent': random.choice(user_agents),
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'DNT': '1',
+        }
+
+    async def _rate_limit_domain(self, domain: str):
+        now = time.monotonic()
+        if domain in self._last_request:
+            elapsed = now - self._last_request[domain]
+            if elapsed < self.rate_limit:
+                await asyncio.sleep(self.rate_limit - elapsed)
+        self._last_request[domain] = time.monotonic()
+
+    def _parse(self, html: str, url: str, status: int) -> ScrapedPage:
+        soup = BeautifulSoup(html, 'html.parser')
+        return ScrapedPage(
+            url=url,
+            title=(soup.title.string.strip() if soup.title else ''),
+            headings=[h.get_text(strip=True) for h in soup.find_all(['h1','h2','h3'])],
+            links=list(set(urljoin(url, a['href']) for a in soup.find_all('a', href=True)
+                          if not a['href'].startswith(('javascript:','mailto:','tel:')))),
+            paragraphs=[p.get_text(strip=True) for p in soup.find_all('p') if len(p.get_text(strip=True)) > 40],
+            images=[urljoin(url, img.get('src','')) for img in soup.find_all('img', src=True)],
+            status=status,
+        )
+
+    async def _fetch_one(self, session: aiohttp.ClientSession, url: str) -> Optional[ScrapedPage]:
+        domain = urlparse(url).netloc
+        await self._rate_limit_domain(domain)
+
+        for attempt in range(self.max_retries):
+            try:
+                async with self.semaphore:
+                    proxy = self._get_proxy()
+                    async with session.get(
+                        url,
+                        headers=self._get_headers(),
+                        proxy=proxy,
+                        timeout=self.timeout,
+                        ssl=False,
+                    ) as resp:
+                        if resp.status == 200:
+                            html = await resp.text()
+                            page = self._parse(html, url, resp.status)
+                            log.info(f"✓ {url} ({len(page.paragraphs)} paragraphs)")
+                            return page
+                        elif resp.status == 429:
+                            wait = 2 ** (attempt + 1)
+                            log.warning(f"Rate limited on {url}, waiting {wait}s")
+                            await asyncio.sleep(wait)
+                        else:
+                            log.warning(f"HTTP {resp.status} for {url}")
+                            return None
+            except asyncio.TimeoutError:
+                log.warning(f"Timeout {url} (attempt {attempt+1})")
+                await asyncio.sleep(2 ** attempt)
+            except Exception as e:
+                log.error(f"Error {url}: {e} (attempt {attempt+1})")
+                await asyncio.sleep(2 ** attempt)
+        return None
+
+    async def scrape(self, urls: List[str]) -> List[ScrapedPage]:
+        connector = aiohttp.TCPConnector(limit=100, ttl_dns_cache=300)
+        async with aiohttp.ClientSession(connector=connector) as session:
+            tasks = [self._fetch_one(session, url) for url in urls]
+            for coro in asyncio.as_completed(tasks):
+                result = await coro
+                if result:
+                    self.results.append(result)
+                else:
+                    self.failed.append('unknown')
+        return self.results
+
+    async def save_json(self, path: str):
+        async with aiofiles.open(path, 'w') as f:
+            await f.write(json.dumps([asdict(r) for r in self.results], indent=2))
+        log.info(f"Saved {len(self.results)} results to {path}")
+
+
+async def main():
+    urls = [
+        'https://example.com',
+        'https://httpbin.org/html',
+        # Add more URLs here
+    ]
+    
+    scraper = AsyncScraper(
+        rate_limit=1.0,     # 1 second between requests per domain
+        max_retries=3,
+        concurrency=5,       # max 5 concurrent requests
+    )
+    
+    results = await scraper.scrape(urls)
+    await scraper.save_json('results.json')
+    
+    print(f"\\nScraped: {len(results)} pages")
+    print(f"Failed:  {len(scraper.failed)}")
+    for r in results:
+        print(f"  {r.url}: {len(r.paragraphs)} paragraphs, {len(r.links)} links")
+
+if __name__ == '__main__':
+    asyncio.run(main())
+
+# Install: pip install aiohttp aiofiles beautifulsoup4`
+      },
+
+      'neural network from scratch': {
+        desc: 'Neural network from scratch using only NumPy — forward pass, backprop, training loop',
+        code: `import numpy as np
+import matplotlib.pyplot as plt
+from typing import List, Tuple, Optional
+
+class Activation:
+    @staticmethod
+    def relu(x):     return np.maximum(0, x)
+    @staticmethod
+    def relu_d(x):   return (x > 0).astype(float)
+    @staticmethod
+    def sigmoid(x):  return 1 / (1 + np.exp(-np.clip(x, -500, 500)))
+    @staticmethod
+    def sigmoid_d(x):
+        s = Activation.sigmoid(x)
+        return s * (1 - s)
+    @staticmethod
+    def tanh(x):     return np.tanh(x)
+    @staticmethod
+    def tanh_d(x):   return 1 - np.tanh(x)**2
+    @staticmethod
+    def softmax(x):
+        e = np.exp(x - x.max(axis=1, keepdims=True))
+        return e / e.sum(axis=1, keepdims=True)
+    @staticmethod
+    def linear(x):   return x
+    @staticmethod
+    def linear_d(x): return np.ones_like(x)
+
+class Layer:
+    def __init__(self, n_in: int, n_out: int, activation: str = 'relu', dropout: float = 0.0):
+        # He initialization for ReLU, Xavier for others
+        scale = np.sqrt(2/n_in) if activation == 'relu' else np.sqrt(1/n_in)
+        self.W = np.random.randn(n_in, n_out) * scale
+        self.b = np.zeros((1, n_out))
+        self.dW = np.zeros_like(self.W)
+        self.db = np.zeros_like(self.b)
+        # Adam optimizer state
+        self.mW = np.zeros_like(self.W); self.vW = np.zeros_like(self.W)
+        self.mb = np.zeros_like(self.b); self.vb = np.zeros_like(self.b)
+        self.activation = activation
+        self.dropout_rate = dropout
+        self.cache = {}
+
+    def forward(self, X: np.ndarray, training: bool = True) -> np.ndarray:
+        self.cache['input'] = X
+        Z = X @ self.W + self.b
+        self.cache['Z'] = Z
+        act_fn = getattr(Activation, self.activation)
+        A = act_fn(Z)
+        # Dropout
+        if training and self.dropout_rate > 0:
+            mask = np.random.binomial(1, 1-self.dropout_rate, A.shape) / (1-self.dropout_rate)
+            A *= mask
+            self.cache['mask'] = mask
+        self.cache['A'] = A
+        return A
+
+    def backward(self, dA: np.ndarray) -> np.ndarray:
+        m = self.cache['input'].shape[0]
+        if 'mask' in self.cache:
+            dA = dA * self.cache['mask']
+        act_d = getattr(Activation, self.activation + '_d')
+        dZ = dA * act_d(self.cache['Z'])
+        self.dW = (self.cache['input'].T @ dZ) / m
+        self.db = dZ.mean(axis=0, keepdims=True)
+        return dZ @ self.W.T
+
+class NeuralNetwork:
+    def __init__(self, layer_dims: List[int], activations: List[str] = None,
+                 dropout_rates: List[float] = None, lr: float = 1e-3,
+                 optimizer: str = 'adam', l2: float = 0.0):
+        n = len(layer_dims) - 1
+        acts = activations or ['relu'] * (n-1) + ['sigmoid']
+        drops = dropout_rates or [0.0] * n
+        self.layers = [Layer(layer_dims[i], layer_dims[i+1], acts[i], drops[i]) for i in range(n)]
+        self.lr = lr
+        self.optimizer = optimizer
+        self.l2 = l2
+        self.t = 0  # Adam timestep
+        self.history = {'loss': [], 'val_loss': [], 'acc': [], 'val_acc': []}
+
+    def forward(self, X: np.ndarray, training: bool = True) -> np.ndarray:
+        for layer in self.layers:
+            X = layer.forward(X, training)
+        return X
+
+    def _loss(self, y_pred: np.ndarray, y_true: np.ndarray) -> float:
+        eps = 1e-15
+        y_pred = np.clip(y_pred, eps, 1-eps)
+        bce = -np.mean(y_true * np.log(y_pred) + (1-y_true) * np.log(1-y_pred))
+        # L2 regularization
+        l2_loss = self.l2 * sum(np.sum(l.W**2) for l in self.layers) / 2
+        return bce + l2_loss
+
+    def backward(self, y_pred: np.ndarray, y_true: np.ndarray):
+        dA = -(y_true / (y_pred + 1e-15) - (1-y_true) / (1-y_pred+1e-15)) / len(y_true)
+        for layer in reversed(self.layers):
+            dA = layer.backward(dA)
+            # L2 gradient
+            if self.l2 > 0:
+                layer.dW += self.l2 * layer.W
+
+    def _update(self):
+        self.t += 1
+        β1, β2, ε = 0.9, 0.999, 1e-8
+        for layer in self.layers:
+            if self.optimizer == 'adam':
+                layer.mW = β1*layer.mW + (1-β1)*layer.dW
+                layer.vW = β2*layer.vW + (1-β2)*layer.dW**2
+                mW_hat = layer.mW / (1-β1**self.t)
+                vW_hat = layer.vW / (1-β2**self.t)
+                layer.W -= self.lr * mW_hat / (np.sqrt(vW_hat) + ε)
+                layer.mb = β1*layer.mb + (1-β1)*layer.db
+                layer.vb = β2*layer.vb + (1-β2)*layer.db**2
+                mb_hat = layer.mb / (1-β1**self.t)
+                vb_hat = layer.vb / (1-β2**self.t)
+                layer.b -= self.lr * mb_hat / (np.sqrt(vb_hat) + ε)
+            else:
+                layer.W -= self.lr * layer.dW
+                layer.b -= self.lr * layer.db
+
+    def fit(self, X: np.ndarray, y: np.ndarray, epochs: int = 100,
+            batch_size: int = 32, validation_data: Tuple = None, verbose: int = 10):
+        for epoch in range(1, epochs+1):
+            idx = np.random.permutation(len(X))
+            X_shuf, y_shuf = X[idx], y[idx]
+            for i in range(0, len(X), batch_size):
+                Xb = X_shuf[i:i+batch_size]
+                yb = y_shuf[i:i+batch_size]
+                pred = self.forward(Xb, training=True)
+                self.backward(pred, yb)
+                self._update()
+            # Metrics
+            train_pred = self.forward(X, training=False)
+            loss = self._loss(train_pred, y)
+            acc = np.mean((train_pred > 0.5) == y)
+            self.history['loss'].append(loss)
+            self.history['acc'].append(acc)
+            if validation_data:
+                vX, vy = validation_data
+                vpred = self.forward(vX, training=False)
+                self.history['val_loss'].append(self._loss(vpred, vy))
+                self.history['val_acc'].append(np.mean((vpred > 0.5) == vy))
+            if epoch % verbose == 0:
+                msg = f"Epoch {epoch:4d} | loss: {loss:.4f} | acc: {acc:.4f}"
+                if validation_data:
+                    msg += f" | val_loss: {self.history['val_loss'][-1]:.4f} | val_acc: {self.history['val_acc'][-1]:.4f}"
+                print(msg)
+        return self
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        return self.forward(X, training=False)
+
+# ── Example: XOR problem ──
+if __name__ == '__main__':
+    np.random.seed(42)
+    # XOR dataset
+    X = np.array([[0,0],[0,1],[1,0],[1,1]], dtype=float)
+    y = np.array([[0],[1],[1],[0]], dtype=float)
+    
+    model = NeuralNetwork(
+        layer_dims=[2, 16, 8, 1],
+        activations=['relu', 'relu', 'sigmoid'],
+        dropout_rates=[0.0, 0.1, 0.0],
+        lr=1e-2,
+        optimizer='adam',
+        l2=1e-4,
+    )
+    model.fit(X, y, epochs=2000, batch_size=4, verbose=200)
+    
+    print("\\nPredictions:")
+    for xi, yi in zip(X, y):
+        pred = model.predict(xi.reshape(1,-1))[0,0]
+        print(f"  Input: {xi} → Predicted: {pred:.4f} | True: {yi[0]}")`
+      },
+
+      'rest api': {
+        desc: 'Production-ready REST API with FastAPI, async SQLAlchemy, JWT auth, Pydantic models',
+        code: `from fastapi import FastAPI, Depends, HTTPException, status, BackgroundTasks
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped, relationship
+from sqlalchemy import String, Integer, Boolean, DateTime, ForeignKey, select, func
+from pydantic import BaseModel, EmailStr, field_validator
+from passlib.context import CryptContext
+from jose import JWTError, jwt
+from datetime import datetime, timedelta
+from typing import Optional, List, Annotated
+import uuid, os, asyncio
+
+# ── Config ──
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./app.db")
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+engine = create_async_engine(DATABASE_URL, echo=True)
+SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+
+# ── Database Models ──
+class Base(DeclarativeBase): pass
+
+class User(Base):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    uuid: Mapped[str] = mapped_column(String, default=lambda: str(uuid.uuid4()), unique=True)
+    email: Mapped[str] = mapped_column(String, unique=True, index=True)
+    username: Mapped[str] = mapped_column(String, unique=True, index=True)
+    hashed_password: Mapped[str] = mapped_column(String)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    items: Mapped[List["Item"]] = relationship("Item", back_populates="owner", cascade="all, delete")
+
+class Item(Base):
+    __tablename__ = "items"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    title: Mapped[str] = mapped_column(String(200))
+    description: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    is_public: Mapped[bool] = mapped_column(Boolean, default=False)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    owner: Mapped["User"] = relationship("User", back_populates="items")
+
+# ── Pydantic Schemas ──
+class UserCreate(BaseModel):
+    email: EmailStr
+    username: str
+    password: str
+    @field_validator('username')
+    def username_alphanumeric(cls, v):
+        if not v.replace('_','').isalnum():
+            raise ValueError('Username must be alphanumeric')
+        return v
+    @field_validator('password')
+    def password_strength(cls, v):
+        if len(v) < 8: raise ValueError('Password must be at least 8 characters')
+        return v
+
+class UserOut(BaseModel):
+    id: int; uuid: str; email: str; username: str; is_active: bool; created_at: datetime
+    model_config = {"from_attributes": True}
+
+class ItemCreate(BaseModel):
+    title: str; description: Optional[str] = None; is_public: bool = False
+
+class ItemOut(BaseModel):
+    id: int; title: str; description: Optional[str]; is_public: bool
+    owner_id: int; created_at: datetime
+    model_config = {"from_attributes": True}
+
+class Token(BaseModel):
+    access_token: str; token_type: str; expires_in: int
+
+# ── Auth helpers ──
+def verify_password(plain, hashed): return pwd_context.verify(plain, hashed)
+def hash_password(password): return pwd_context.hash(password)
+def create_token(data: dict, expires_delta: timedelta = None) -> str:
+    payload = {**data, "exp": datetime.utcnow() + (expires_delta or timedelta(minutes=15))}
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+async def get_db():
+    async with SessionLocal() as session:
+        yield session
+
+DBDep = Annotated[AsyncSession, Depends(get_db)]
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: DBDep) -> User:
+    cred_exc = HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials", {"WWW-Authenticate":"Bearer"})
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+        if not user_id: raise cred_exc
+    except JWTError: raise cred_exc
+    result = await db.execute(select(User).where(User.id == int(user_id)))
+    user = result.scalar_one_or_none()
+    if not user or not user.is_active: raise cred_exc
+    return user
+
+CurrentUser = Annotated[User, Depends(get_current_user)]
+
+# ── App ──
+app = FastAPI(title="Nix 4 API", version="1.0.0", docs_url="/docs")
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+@app.on_event("startup")
+async def startup():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+@app.get("/health")
+async def health(): return {"status": "ok", "timestamp": datetime.utcnow()}
+
+@app.post("/auth/register", response_model=UserOut, status_code=201)
+async def register(data: UserCreate, db: DBDep):
+    existing = await db.execute(select(User).where((User.email==data.email)|(User.username==data.username)))
+    if existing.scalar_one_or_none():
+        raise HTTPException(400, "Email or username already registered")
+    user = User(email=data.email, username=data.username, hashed_password=hash_password(data.password))
+    db.add(user); await db.commit(); await db.refresh(user)
+    return user
+
+@app.post("/auth/token", response_model=Token)
+async def login(form: Annotated[OAuth2PasswordRequestForm, Depends()], db: DBDep):
+    result = await db.execute(select(User).where(User.username == form.username))
+    user = result.scalar_one_or_none()
+    if not user or not verify_password(form.password, user.hashed_password):
+        raise HTTPException(401, "Incorrect username or password")
+    token = create_token({"sub": str(user.id)}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    return {"access_token": token, "token_type": "bearer", "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES*60}
+
+@app.get("/users/me", response_model=UserOut)
+async def me(user: CurrentUser): return user
+
+@app.get("/items", response_model=List[ItemOut])
+async def list_items(user: CurrentUser, db: DBDep, skip: int=0, limit: int=20):
+    result = await db.execute(select(Item).where(Item.owner_id==user.id).offset(skip).limit(limit))
+    return result.scalars().all()
+
+@app.post("/items", response_model=ItemOut, status_code=201)
+async def create_item(data: ItemCreate, user: CurrentUser, db: DBDep):
+    item = Item(**data.model_dump(), owner_id=user.id)
+    db.add(item); await db.commit(); await db.refresh(item)
+    return item
+
+@app.delete("/items/{item_id}", status_code=204)
+async def delete_item(item_id: int, user: CurrentUser, db: DBDep):
+    result = await db.execute(select(Item).where(Item.id==item_id, Item.owner_id==user.id))
+    item = result.scalar_one_or_none()
+    if not item: raise HTTPException(404, "Item not found")
+    await db.delete(item); await db.commit()
+
+# Run: uvicorn main:app --reload`
+      },
+
+      default: `import sys, os, json, time
+from pathlib import Path
+from typing import Any, Optional
+from dataclasses import dataclass, field, asdict
+from functools import wraps
+
+def timer(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        t = time.perf_counter()
+        result = fn(*args, **kwargs)
+        print(f"{fn.__name__} completed in {time.perf_counter()-t:.4f}s")
+        return result
+    return wrapper
+
+@dataclass
+class Config:
+    debug: bool = False
+    output_dir: str = 'output'
+    max_retries: int = 3
+    timeout: float = 30.0
+    extra: dict = field(default_factory=dict)
+    
+    @classmethod
+    def from_file(cls, path: str) -> 'Config':
+        with open(path) as f:
+            return cls(**json.load(f))
+    
+    def save(self, path: str):
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        with open(path, 'w') as f:
+            json.dump(asdict(self), f, indent=2)
+
+@timer
+def main():
+    cfg = Config(debug=True)
+    print(f"Running with config: {cfg}")
+    Path(cfg.output_dir).mkdir(exist_ok=True)
+    
+    # Your code here
+    data = [i**2 for i in range(1, 11)]
+    print(f"Squares: {data}")
+    print(f"Sum: {sum(data)}")
+    
+if __name__ == '__main__':
+    main()`
+    },
+
+    javascript: {
+      'real-time chat with websockets': {
+        desc: 'Real-time chat with WebSockets — server (Node.js) + client with rooms, auth, history',
+        code: `// ═══ SERVER (server.js) — Node.js + ws ═══
+const WebSocket = require('ws');
+const http = require('http');
+const crypto = require('crypto');
+
+const server = http.createServer();
+const wss = new WebSocket.Server({ server });
+
+// In-memory store (use Redis in production)
+const rooms = new Map();    // roomId → Set<client>
+const clients = new Map();  // ws → { id, username, room, joinedAt }
+const history = new Map();  // roomId → Message[]
+const MAX_HISTORY = 100;
+
+function broadcast(room, message, excludeWs = null) {
+  const roomClients = rooms.get(room) || new Set();
+  const payload = JSON.stringify(message);
+  for (const ws of roomClients) {
+    if (ws !== excludeWs && ws.readyState === WebSocket.OPEN) {
+      ws.send(payload);
+    }
+  }
+}
+
+function addToHistory(room, message) {
+  if (!history.has(room)) history.set(room, []);
+  const h = history.get(room);
+  h.push(message);
+  if (h.length > MAX_HISTORY) h.shift();
+}
+
+function getUserList(room) {
+  const roomClients = rooms.get(room) || new Set();
+  return [...roomClients].map(ws => clients.get(ws)?.username).filter(Boolean);
+}
+
+wss.on('connection', (ws, req) => {
+  const clientId = crypto.randomUUID();
+  clients.set(ws, { id: clientId, username: null, room: null, joinedAt: Date.now() });
+  
+  ws.on('message', (raw) => {
+    let msg;
+    try { msg = JSON.parse(raw); } catch { return; }
+    const client = clients.get(ws);
+    
+    switch (msg.type) {
+      case 'join': {
+        const { username, room } = msg;
+        if (!username?.trim() || !room?.trim()) return;
+        
+        // Leave old room
+        if (client.room) {
+          rooms.get(client.room)?.delete(ws);
+          broadcast(client.room, { type: 'system', text: \`\${client.username} left the room\`, ts: Date.now() }, ws);
+        }
+        
+        // Join new room
+        client.username = username.trim().slice(0, 30);
+        client.room = room.trim().slice(0, 50);
+        if (!rooms.has(client.room)) rooms.set(client.room, new Set());
+        rooms.get(client.room).add(ws);
+        
+        // Send history
+        ws.send(JSON.stringify({ type: 'history', messages: history.get(client.room) || [] }));
+        
+        // Announce join
+        const joinMsg = { type: 'system', text: \`\${client.username} joined the room\`, ts: Date.now(), users: getUserList(client.room) };
+        addToHistory(client.room, joinMsg);
+        broadcast(client.room, joinMsg);
+        ws.send(JSON.stringify({ type: 'joined', room: client.room, users: getUserList(client.room) }));
+        break;
+      }
+      
+      case 'message': {
+        if (!client.room || !client.username) return;
+        if (!msg.text?.trim() || msg.text.length > 2000) return;
+        
+        const chatMsg = {
+          type: 'message',
+          id: crypto.randomUUID(),
+          userId: client.id,
+          username: client.username,
+          text: msg.text.trim(),
+          ts: Date.now(),
+        };
+        addToHistory(client.room, chatMsg);
+        broadcast(client.room, chatMsg);
+        break;
+      }
+      
+      case 'typing': {
+        if (!client.room) return;
+        broadcast(client.room, { type: 'typing', username: client.username, isTyping: msg.isTyping }, ws);
+        break;
+      }
+      
+      case 'ping': ws.send(JSON.stringify({ type: 'pong' })); break;
+    }
+  });
+  
+  ws.on('close', () => {
+    const client = clients.get(ws);
+    if (client?.room) {
+      rooms.get(client.room)?.delete(ws);
+      const leaveMsg = { type: 'system', text: \`\${client.username} disconnected\`, ts: Date.now(), users: getUserList(client.room) };
+      addToHistory(client.room, leaveMsg);
+      broadcast(client.room, leaveMsg);
+    }
+    clients.delete(ws);
+  });
+  
+  ws.on('error', console.error);
+  
+  // Ping/pong keepalive
+  const pingInterval = setInterval(() => {
+    if (ws.readyState === WebSocket.OPEN) ws.ping();
+  }, 30000);
+  ws.on('close', () => clearInterval(pingInterval));
+});
+
+server.listen(8080, () => console.log('Chat server running on ws://localhost:8080'));
+
+// ═══ CLIENT (browser) ═══
+class ChatClient {
+  constructor(url) {
+    this.url = url;
+    this.ws = null;
+    this.reconnectAttempts = 0;
+    this.maxReconnect = 10;
+    this.handlers = {};
+    this.typingTimeout = null;
+    this.messageQueue = [];
+  }
+
+  connect() {
+    this.ws = new WebSocket(this.url);
+    this.ws.onopen = () => {
+      console.log('Connected');
+      this.reconnectAttempts = 0;
+      this.emit('connected');
+      this.messageQueue.forEach(m => this.ws.send(JSON.stringify(m)));
+      this.messageQueue = [];
+    };
+    this.ws.onmessage = ({ data }) => {
+      try { this.handleMessage(JSON.parse(data)); } catch(e) {}
+    };
+    this.ws.onclose = () => {
+      this.emit('disconnected');
+      const delay = Math.min(1000 * 2 ** this.reconnectAttempts, 30000);
+      if (this.reconnectAttempts < this.maxReconnect) {
+        this.reconnectAttempts++;
+        setTimeout(() => this.connect(), delay);
+      }
+    };
+    this.ws.onerror = e => this.emit('error', e);
+  }
+
+  handleMessage(msg) {
+    this.emit('message', msg);
+    this.emit(msg.type, msg);
+  }
+
+  send(data) {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify(data));
+    } else {
+      this.messageQueue.push(data);
+    }
+  }
+
+  join(username, room) { this.send({ type: 'join', username, room }); }
+  chat(text) { this.send({ type: 'message', text }); }
+  
+  typing(isTyping) {
+    this.send({ type: 'typing', isTyping });
+    if (isTyping) {
+      clearTimeout(this.typingTimeout);
+      this.typingTimeout = setTimeout(() => this.typing(false), 3000);
+    }
+  }
+
+  on(event, handler) {
+    if (!this.handlers[event]) this.handlers[event] = [];
+    this.handlers[event].push(handler);
+    return this;
+  }
+  emit(event, data) { (this.handlers[event] || []).forEach(h => h(data)); }
+  disconnect() { this.ws?.close(); }
+}
+
+// Usage:
+// const chat = new ChatClient('ws://localhost:8080');
+// chat.on('message', msg => console.log(msg));
+// chat.connect();
+// chat.join('Alice', 'general');
+// chat.chat('Hello!');
+
+// npm install ws  →  node server.js`
+      },
+
+      default: `// Nix 4 — Advanced JavaScript Module
+class EventEmitter {
+  #listeners = new Map();
+  on(e, fn) { (this.#listeners.get(e) ?? this.#listeners.set(e, new Set()).get(e)).add(fn); return this; }
+  off(e, fn) { this.#listeners.get(e)?.delete(fn); }
+  emit(e, ...args) { this.#listeners.get(e)?.forEach(fn => fn(...args)); }
+  once(e, fn) { const wrapper = (...args) => { fn(...args); this.off(e, wrapper); }; this.on(e, wrapper); }
+}
+
+class Store extends EventEmitter {
+  #state; #history = []; #maxHistory = 50;
+  constructor(initial) { super(); this.#state = structuredClone(initial); }
+  get state() { return structuredClone(this.#state); }
+  setState(updater) {
+    const prev = this.#state;
+    this.#state = typeof updater === 'function' ? updater(structuredClone(prev)) : { ...prev, ...updater };
+    this.#history.push({ prev, next: this.#state, ts: Date.now() });
+    if (this.#history.length > this.#maxHistory) this.#history.shift();
+    this.emit('change', this.#state, prev);
+  }
+  undo() {
+    const last = this.#history.pop();
+    if (last) { this.#state = last.prev; this.emit('change', this.#state, last.next); }
+  }
+  select(selector) { return selector(this.#state); }
+}
+
+// Usage
+const store = new Store({ count: 0, user: null, items: [] });
+store.on('change', (state, prev) => console.log('State changed:', state));
+store.setState(s => ({ ...s, count: s.count + 1 }));
+store.setState({ user: { name: 'Alice' } });
+console.log(store.state);`
+    },
+
+    sql: {
+      'e-commerce database': {
+        desc: 'Complete e-commerce database schema with products, orders, reviews, inventory',
+        code: `-- Nix 4 Generated: Complete E-Commerce Database Schema (PostgreSQL)
+
+-- Extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pg_trgm; -- for fuzzy search
+
+-- ── USERS ──
+CREATE TABLE users (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email       VARCHAR(255) UNIQUE NOT NULL,
+    username    VARCHAR(50) UNIQUE NOT NULL,
+    password    VARCHAR(255) NOT NULL,
+    first_name  VARCHAR(100),
+    last_name   VARCHAR(100),
+    phone       VARCHAR(20),
+    role        VARCHAR(20) DEFAULT 'customer' CHECK (role IN ('customer','admin','vendor')),
+    is_active   BOOLEAN DEFAULT TRUE,
+    is_verified BOOLEAN DEFAULT FALSE,
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ DEFAULT NOW(),
+    last_login  TIMESTAMPTZ
+);
+
+-- ── ADDRESSES ──
+CREATE TABLE addresses (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    label       VARCHAR(50) DEFAULT 'Home',
+    line1       VARCHAR(255) NOT NULL,
+    line2       VARCHAR(255),
+    city        VARCHAR(100) NOT NULL,
+    state       VARCHAR(100),
+    postal_code VARCHAR(20) NOT NULL,
+    country     CHAR(2) NOT NULL DEFAULT 'US',
+    is_default  BOOLEAN DEFAULT FALSE,
+    created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── CATEGORIES ──
+CREATE TABLE categories (
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL,
+    slug        VARCHAR(100) UNIQUE NOT NULL,
+    parent_id   INTEGER REFERENCES categories(id),
+    description TEXT,
+    image_url   VARCHAR(500),
+    sort_order  INTEGER DEFAULT 0,
+    is_active   BOOLEAN DEFAULT TRUE
+);
+
+-- ── PRODUCTS ──
+CREATE TABLE products (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    category_id     INTEGER REFERENCES categories(id),
+    vendor_id       UUID REFERENCES users(id),
+    sku             VARCHAR(100) UNIQUE NOT NULL,
+    name            VARCHAR(300) NOT NULL,
+    slug            VARCHAR(300) UNIQUE NOT NULL,
+    description     TEXT,
+    price           NUMERIC(12,2) NOT NULL CHECK (price >= 0),
+    compare_price   NUMERIC(12,2),
+    cost            NUMERIC(12,2),
+    weight_kg       NUMERIC(8,3),
+    is_active       BOOLEAN DEFAULT TRUE,
+    is_digital      BOOLEAN DEFAULT FALSE,
+    requires_shipping BOOLEAN DEFAULT TRUE,
+    rating_avg      NUMERIC(3,2) DEFAULT 0 CHECK (rating_avg BETWEEN 0 AND 5),
+    rating_count    INTEGER DEFAULT 0,
+    sold_count      INTEGER DEFAULT 0,
+    view_count      INTEGER DEFAULT 0,
+    tags            TEXT[],
+    metadata        JSONB DEFAULT '{}',
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT positive_compare CHECK (compare_price IS NULL OR compare_price >= price)
+);
+
+-- Full-text search index
+CREATE INDEX products_fts ON products USING gin(to_tsvector('english', name || ' ' || COALESCE(description,'')));
+CREATE INDEX products_tags ON products USING gin(tags);
+CREATE INDEX products_category ON products(category_id) WHERE is_active;
+
+-- ── PRODUCT VARIANTS (sizes, colors, etc.) ──
+CREATE TABLE product_variants (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    product_id  UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    sku         VARCHAR(100) UNIQUE NOT NULL,
+    title       VARCHAR(200) NOT NULL,
+    price       NUMERIC(12,2),
+    attributes  JSONB NOT NULL DEFAULT '{}', -- {"color":"red","size":"XL"}
+    is_active   BOOLEAN DEFAULT TRUE
+);
+
+-- ── INVENTORY ──
+CREATE TABLE inventory (
+    id              SERIAL PRIMARY KEY,
+    variant_id      UUID UNIQUE NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE,
+    quantity        INTEGER NOT NULL DEFAULT 0 CHECK (quantity >= 0),
+    reserved        INTEGER NOT NULL DEFAULT 0 CHECK (reserved >= 0),
+    reorder_point   INTEGER DEFAULT 10,
+    reorder_qty     INTEGER DEFAULT 50,
+    updated_at      TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT available_check CHECK (quantity >= reserved)
+);
+
+-- ── ORDERS ──
+CREATE TABLE orders (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id         UUID REFERENCES users(id) ON DELETE SET NULL,
+    status          VARCHAR(30) DEFAULT 'pending' 
+                    CHECK (status IN ('pending','confirmed','processing','shipped','delivered','cancelled','refunded')),
+    currency        CHAR(3) DEFAULT 'USD',
+    subtotal        NUMERIC(12,2) NOT NULL,
+    discount        NUMERIC(12,2) DEFAULT 0,
+    tax             NUMERIC(12,2) DEFAULT 0,
+    shipping        NUMERIC(12,2) DEFAULT 0,
+    total           NUMERIC(12,2) NOT NULL,
+    shipping_address_id UUID REFERENCES addresses(id),
+    billing_address_id  UUID REFERENCES addresses(id),
+    notes           TEXT,
+    tracking_number VARCHAR(100),
+    shipped_at      TIMESTAMPTZ,
+    delivered_at    TIMESTAMPTZ,
+    cancelled_at    TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── ORDER ITEMS ──
+CREATE TABLE order_items (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id    UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    variant_id  UUID REFERENCES product_variants(id) ON DELETE SET NULL,
+    product_id  UUID REFERENCES products(id) ON DELETE SET NULL,
+    name        VARCHAR(300) NOT NULL,
+    sku         VARCHAR(100),
+    quantity    INTEGER NOT NULL CHECK (quantity > 0),
+    unit_price  NUMERIC(12,2) NOT NULL,
+    total_price NUMERIC(12,2) NOT NULL
+);
+
+-- ── PAYMENTS ──
+CREATE TABLE payments (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id        UUID NOT NULL REFERENCES orders(id),
+    provider        VARCHAR(50) NOT NULL, -- 'stripe','paypal','crypto'
+    provider_id     VARCHAR(255) UNIQUE,
+    amount          NUMERIC(12,2) NOT NULL,
+    currency        CHAR(3) DEFAULT 'USD',
+    status          VARCHAR(30) DEFAULT 'pending'
+                    CHECK (status IN ('pending','processing','completed','failed','refunded','disputed')),
+    metadata        JSONB DEFAULT '{}',
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── REVIEWS ──
+CREATE TABLE reviews (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    product_id  UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    order_id    UUID REFERENCES orders(id),
+    rating      SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    title       VARCHAR(200),
+    body        TEXT,
+    is_verified BOOLEAN DEFAULT FALSE,
+    helpful_count INTEGER DEFAULT 0,
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(product_id, user_id)
+);
+
+-- Auto-update product rating
+CREATE OR REPLACE FUNCTION update_product_rating() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE products SET
+        rating_avg   = (SELECT AVG(rating)   FROM reviews WHERE product_id = NEW.product_id),
+        rating_count = (SELECT COUNT(*)       FROM reviews WHERE product_id = NEW.product_id)
+    WHERE id = NEW.product_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER review_rating_trigger AFTER INSERT OR UPDATE OR DELETE ON reviews
+FOR EACH ROW EXECUTE FUNCTION update_product_rating();
+
+-- ── USEFUL QUERIES ──
+
+-- Best sellers
+SELECT p.name, p.price, p.sold_count, p.rating_avg, c.name AS category
+FROM products p JOIN categories c ON p.category_id = c.id
+ORDER BY p.sold_count DESC LIMIT 10;
+
+-- Revenue by month
+SELECT DATE_TRUNC('month', created_at) AS month, COUNT(*) AS orders, SUM(total) AS revenue
+FROM orders WHERE status NOT IN ('cancelled','refunded')
+GROUP BY 1 ORDER BY 1 DESC;
+
+-- Low inventory alert
+SELECT p.name, pv.title, pv.sku, i.quantity - i.reserved AS available, i.reorder_point
+FROM inventory i
+JOIN product_variants pv ON pv.id = i.variant_id
+JOIN products p ON p.id = pv.product_id
+WHERE i.quantity - i.reserved <= i.reorder_point
+ORDER BY available ASC;
+
+-- Customer lifetime value
+SELECT u.email, COUNT(DISTINCT o.id) AS orders, SUM(o.total) AS ltv,
+       AVG(o.total) AS avg_order, MAX(o.created_at) AS last_order
+FROM users u JOIN orders o ON o.user_id = u.id
+WHERE o.status = 'delivered'
+GROUP BY u.id ORDER BY ltv DESC LIMIT 20;`
+      },
+
+      default: `-- Nix 4 SQL: Comprehensive Schema Template
+
+CREATE TABLE IF NOT EXISTS entities (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name        VARCHAR(200) NOT NULL,
+    slug        VARCHAR(200) UNIQUE,
+    data        JSONB DEFAULT '{}',
+    is_active   BOOLEAN DEFAULT TRUE,
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Auto-update timestamp trigger
+CREATE OR REPLACE FUNCTION set_updated_at() RETURNS TRIGGER AS $$
+BEGIN NEW.updated_at = NOW(); RETURN NEW; END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER entities_updated_at BEFORE UPDATE ON entities
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Full text search
+CREATE INDEX entities_fts ON entities USING gin(to_tsvector('english', name));
+CREATE INDEX entities_data ON entities USING gin(data);
+
+SELECT *, data->>'key' AS extracted FROM entities WHERE data @> '{"type":"example"}';`
+    },
+
+    rust: {
+      default: `// Nix 4 Generated: Rust — Async HTTP client with error handling and retry
+use std::time::Duration;
+use tokio::time::sleep;
+use serde::{Deserialize, Serialize};
+use reqwest::{Client, StatusCode};
+use thiserror::Error;
+use anyhow::Result;
+
+#[derive(Error, Debug)]
+pub enum FetchError {
+    #[error("HTTP error {status}: {message}")]
+    Http { status: u16, message: String },
+    #[error("Request failed after {attempts} attempts: {source}")]
+    MaxRetries { attempts: u32, source: reqwest::Error },
+    #[error("Parse error: {0}")]
+    Parse(#[from] serde_json::Error),
+}
+
+#[derive(Debug, Clone)]
+pub struct ApiClient {
+    client: Client,
+    base_url: String,
+    max_retries: u32,
+    retry_delay_ms: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Post {
+    pub id: u32,
+    pub title: String,
+    pub body: String,
+    #[serde(rename = "userId")]
+    pub user_id: u32,
+}
+
+impl ApiClient {
+    pub fn new(base_url: impl Into<String>) -> Result<Self> {
+        let client = Client::builder()
+            .timeout(Duration::from_secs(30))
+            .user_agent("Nix4Client/1.0")
+            .build()?;
+        Ok(Self { client, base_url: base_url.into(), max_retries: 3, retry_delay_ms: 500 })
+    }
+
+    async fn request_with_retry<T>(&self, url: &str) -> Result<T, FetchError>
+    where
+        T: for<'de> Deserialize<'de>,
+    {
+        let mut last_err = None;
+        for attempt in 0..self.max_retries {
+            if attempt > 0 {
+                let delay = self.retry_delay_ms * 2u64.pow(attempt - 1);
+                sleep(Duration::from_millis(delay)).await;
+            }
+            match self.client.get(url).send().await {
+                Ok(resp) => {
+                    if resp.status().is_success() {
+                        return Ok(resp.json::<T>().await.map_err(|e| {
+                            FetchError::Http { status: 0, message: e.to_string() }
+                        })?);
+                    }
+                    let status = resp.status().as_u16();
+                    if status == 429 || status >= 500 {
+                        last_err = Some(FetchError::Http { status, message: format!("Retryable error") });
+                        continue;
+                    }
+                    return Err(FetchError::Http { status, message: resp.text().await.unwrap_or_default() });
+                }
+                Err(e) => { last_err = Some(FetchError::MaxRetries { attempts: attempt + 1, source: e }); }
+            }
+        }
+        Err(last_err.unwrap())
+    }
+
+    pub async fn get_post(&self, id: u32) -> Result<Post, FetchError> {
+        let url = format!("{}/posts/{}", self.base_url, id);
+        self.request_with_retry(&url).await
+    }
+
+    pub async fn get_posts(&self) -> Result<Vec<Post>, FetchError> {
+        let url = format!("{}/posts", self.base_url);
+        self.request_with_retry(&url).await
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let api = ApiClient::new("https://jsonplaceholder.typicode.com")?;
+    
+    // Fetch multiple posts concurrently
+    let futures: Vec<_> = (1..=5).map(|id| api.get_post(id)).collect();
+    let results = futures::future::join_all(futures).await;
+    
+    for (i, result) in results.into_iter().enumerate() {
+        match result {
+            Ok(post) => println!("Post {}: {}", i+1, post.title),
+            Err(e) => eprintln!("Error fetching post {}: {}", i+1, e),
+        }
+    }
+    Ok(())
+}
+
+// Cargo.toml dependencies:
+// reqwest = { version = "0.11", features = ["json"] }
+// tokio = { version = "1", features = ["full"] }
+// serde = { version = "1", features = ["derive"] }
+// thiserror = "1"
+// anyhow = "1"
+// futures = "0.3"`
+    },
+
+    html: {
+      'landing page': {
+        desc: 'Modern SaaS landing page with animations, dark mode, responsive grid',
+        code: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Product — The Future Is Here</title>
+  <style>
+    :root{--p:#7b2fff;--a:#00e5ff;--g:#00ff88;--bg:#080810;--sf:#10101e;--tx:#e8e8f8;--mu:#6060a0}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);overflow-x:hidden}
+    /* NAV */
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;
+      justify-content:space-between;padding:1rem 5%;background:rgba(8,8,16,.8);
+      border-bottom:1px solid rgba(255,255,255,.07);backdrop-filter:blur(16px)}
+    .brand{font-size:1.3rem;font-weight:900;background:linear-gradient(135deg,var(--p),var(--a));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .nav-links{display:flex;gap:2rem;list-style:none}
+    .nav-links a{color:var(--mu);text-decoration:none;font-size:.95rem;transition:color .2s}
+    .nav-links a:hover{color:var(--tx)}
+    .nav-cta{padding:.55rem 1.5rem;border-radius:8px;background:var(--p);color:#fff;
+      text-decoration:none;font-weight:600;font-size:.9rem;transition:all .2s}
+    .nav-cta:hover{background:var(--a);color:#000;transform:translateY(-1px)}
+    /* HERO */
+    .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;
+      text-align:center;padding:6rem 5% 4rem;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;inset:0;
+      background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(123,47,255,.18),transparent 70%),
+                 radial-gradient(ellipse 60% 40% at 80% 80%,rgba(0,229,255,.08),transparent 60%)}
+    .hero-content{position:relative;max-width:860px}
+    .hero-tag{display:inline-flex;align-items:center;gap:.5rem;font-size:.8rem;
+      background:rgba(123,47,255,.15);border:1px solid rgba(123,47,255,.4);
+      color:#c0a0ff;border-radius:999px;padding:.3rem 1rem;margin-bottom:1.5rem}
+    .hero-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--g);box-shadow:0 0 6px var(--g)}
+    h1{font-size:clamp(2.8rem,7vw,5.2rem);font-weight:900;line-height:1.08;margin-bottom:1.5rem;
+      background:linear-gradient(170deg,#fff 30%,rgba(200,180,255,.6));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .hero p{font-size:1.2rem;color:var(--mu);max-width:580px;margin:0 auto 2.5rem;line-height:1.75}
+    .hero-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.85rem 2rem;
+      border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all .25s;border:none}
+    .btn-p{background:linear-gradient(135deg,var(--p),var(--a));color:#fff;box-shadow:0 0 40px rgba(123,47,255,.35)}
+    .btn-p:hover{transform:translateY(-3px);box-shadow:0 8px 40px rgba(123,47,255,.5)}
+    .btn-g{background:transparent;border:1px solid rgba(255,255,255,.2);color:var(--tx)}
+    .btn-g:hover{background:rgba(255,255,255,.07);transform:translateY(-2px)}
+    /* STATS */
+    .stats{display:flex;justify-content:center;gap:4rem;padding:3rem 5%;
+      border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);flex-wrap:wrap}
+    .stat-item{text-align:center}
+    .stat-num{font-size:2.4rem;font-weight:900;background:linear-gradient(135deg,var(--a),var(--g));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .stat-lbl{font-size:.85rem;color:var(--mu);margin-top:.25rem}
+    /* FEATURES */
+    .section{padding:6rem 5%;max-width:1200px;margin:0 auto}
+    .section-tag{font-size:.75rem;color:var(--a);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.75rem}
+    .section-title{font-size:clamp(2rem,4vw,3rem);font-weight:800;margin-bottom:1rem;max-width:600px}
+    .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;margin-top:3rem}
+    .feature{background:var(--sf);border:1px solid rgba(255,255,255,.07);border-radius:14px;
+      padding:2rem;transition:all .3s;position:relative;overflow:hidden}
+    .feature::before{content:'';position:absolute;inset:0;opacity:0;
+      background:radial-gradient(circle at 50% 0%,rgba(123,47,255,.15),transparent 70%);transition:opacity .3s}
+    .feature:hover{border-color:rgba(123,47,255,.4);transform:translateY(-4px)}
+    .feature:hover::before{opacity:1}
+    .feat-icon{font-size:2.2rem;margin-bottom:1.2rem}
+    .feat-title{font-size:1.1rem;font-weight:700;margin-bottom:.6rem}
+    .feat-desc{color:var(--mu);line-height:1.7;font-size:.92rem}
+    /* CTA */
+    .cta-section{margin:4rem auto;max-width:700px;text-align:center;padding:4rem 5%;
+      background:var(--sf);border:1px solid rgba(255,255,255,.08);border-radius:20px;
+      box-shadow:0 0 80px rgba(123,47,255,.12)}
+    .cta-section h2{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;margin-bottom:1rem}
+    /* FOOTER */
+    footer{text-align:center;padding:2rem;border-top:1px solid rgba(255,255,255,.06);
+      color:var(--mu);font-size:.85rem}
+    /* ANIMATIONS */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+    .anim{opacity:0;animation:fadeUp .7s ease forwards}
+    .anim:nth-child(2){animation-delay:.15s}.anim:nth-child(3){animation-delay:.3s}
+    .anim:nth-child(4){animation-delay:.45s}
+    /* RESPONSIVE */
+    @media(max-width:640px){.nav-links{display:none}.stats{gap:2rem}}
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="brand">YourProduct</div>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#about">About</a></li>
+    </ul>
+    <a href="#" class="nav-cta">Get Started</a>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-tag anim">✦ Now in Public Beta</div>
+      <h1 class="anim">The smartest way<br>to do anything</h1>
+      <p class="anim">A powerful platform built for teams who move fast. Stop context-switching. Start shipping.</p>
+      <div class="hero-btns anim">
+        <a href="#" class="btn btn-p">Start Free → </a>
+        <a href="#" class="btn btn-g">Watch Demo ▶</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="stats">
+    <div class="stat-item"><div class="stat-num">50K+</div><div class="stat-lbl">Active Users</div></div>
+    <div class="stat-item"><div class="stat-num">99.9%</div><div class="stat-lbl">Uptime SLA</div></div>
+    <div class="stat-item"><div class="stat-num">3.2M</div><div class="stat-lbl">Tasks Completed</div></div>
+    <div class="stat-item"><div class="stat-num">140+</div><div class="stat-lbl">Countries</div></div>
+  </div>
+
+  <section id="features" class="section">
+    <div class="section-tag">Features</div>
+    <div class="section-title">Everything you need, nothing you don't</div>
+    <div class="features-grid">
+      <div class="feature"><div class="feat-icon">⚡</div><div class="feat-title">Blazing Fast</div><div class="feat-desc">Sub-100ms response times globally. Your users will notice.</div></div>
+      <div class="feature"><div class="feat-icon">🔒</div><div class="feat-title">Secure by Default</div><div class="feat-desc">SOC 2 Type II, E2E encryption, zero-knowledge architecture.</div></div>
+      <div class="feature"><div class="feat-icon">🧠</div><div class="feat-title">AI-Powered</div><div class="feat-desc">Built-in intelligence that learns from your workflow.</div></div>
+      <div class="feature"><div class="feat-icon">🔗</div><div class="feat-title">100+ Integrations</div><div class="feat-desc">Connect everything you already use in minutes.</div></div>
+      <div class="feature"><div class="feat-icon">📊</div><div class="feat-title">Real-time Analytics</div><div class="feat-desc">Live dashboards with actionable insights, not vanity metrics.</div></div>
+      <div class="feature"><div class="feat-icon">🌍</div><div class="feat-title">Global Scale</div><div class="feat-desc">Edge network across 40+ regions. Infinite scalability.</div></div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <h2>Ready to get started?</h2>
+    <p style="color:var(--mu);margin:1rem 0 2rem;line-height:1.7">Join 50,000+ teams already using YourProduct. Free plan forever. No credit card required.</p>
+    <a href="#" class="btn btn-p" style="font-size:1.1rem;padding:1rem 2.5rem">Start Free Today →</a>
+  </section>
+
+  <footer>© 2025 YourProduct Inc. · Built with Nix 4</footer>
+</body>
+</html>`
+      },
+      default: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Nix 4 Generated Page</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:system-ui,sans-serif;background:#080810;color:#e8e8f8;
+      display:flex;align-items:center;justify-content:center;min-height:100vh}
+    .box{max-width:560px;padding:3rem;text-align:center}
+    h1{font-size:2.5rem;background:linear-gradient(135deg,#00e5ff,#7b2fff);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:1rem}
+    p{color:#6060a0;line-height:1.7;margin-bottom:2rem}
+    button{padding:.8rem 2rem;background:linear-gradient(135deg,#7b2fff,#00e5ff);
+      border:none;border-radius:8px;color:#fff;font-size:1rem;cursor:pointer;transition:transform .2s}
+    button:hover{transform:translateY(-2px)}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Nix 4 Generated</h1>
+    <p>This page was generated by Nix 4. Customize to your needs!</p>
+    <button onclick="this.textContent='✓ Clicked!'">Click Me</button>
+  </div>
+</body>
+</html>`
+    }
+  },
+
+  generate(lang, task) {
+    const l = lang.toLowerCase().replace('js','javascript').replace('ts','typescript').replace('py','python');
+    const lib = this.libs[l];
+    if (!lib) return null;
+    const t = task.toLowerCase();
+    for (const [key, val] of Object.entries(lib)) {
+      if (key !== 'default' && typeof val === 'object' && val.code && t.includes(key.replace(/-/g,' '))) {
+        return { lang: l, task, code: val.code, desc: val.desc };
+      }
+    }
+    // Try partial match
+    for (const [key, val] of Object.entries(lib)) {
+      if (key !== 'default' && typeof val === 'object' && val.code) {
+        const words = key.split(/\s+|-/);
+        if (words.some(w => w.length > 3 && t.includes(w))) return { lang: l, task, code: val.code, desc: val.desc };
+      }
+    }
+    const def = lib.default;
+    return typeof def === 'string'
+      ? { lang: l, task, code: def, desc: `Generated ${l} code for: ${task}` }
+      : { lang: l, task, code: def.code, desc: def.desc };
+  }
+};
+
+// ─────────────────────────────────────────────────────
+// MAIN RESPONSE ENGINE
+// ─────────────────────────────────────────────────────
+function respond(input) {
+  const q = input.trim();
+  const t = q.toLowerCase();
+  const has = (...w) => w.some(x => t.includes(x));
+  const p = B.persona;
+
+  Persona.update(q);
+
+  // ─ CODE GENERATION ─
+  const codeRx = [
+    q.match(/generate\s+(\w+)\s*[:\-]\s*(.+)/i),
+    q.match(/write\s+(?:a\s+)?(?:complex\s+)?(\w+)\s+(?:code|script|program|app|tool|service)\s+(?:for|that|to)\s+(.+)/i),
+    q.match(/(?:create|build|make)\s+(?:a\s+)?(?:complex\s+)?(\w+)\s+(.+)/i),
+    q.match(/code[:\-]\s*(\w+)\s+(.+)/i),
+  ].find(m => m);
+
+  if (codeRx) {
+    const [,lang, task] = codeRx;
+    const validLangs = ['python','py','javascript','js','html','css','sql','rust','react','typescript','ts'];
+    const nl = lang.toLowerCase();
+    if (validLangs.includes(nl)) {
+      const result = CG.generate(nl, task);
+      if (result) {
+        B.codeGenerated++;
+        saveBrain();
+        return { type: 'code', ...result };
+      }
+    }
+  }
+
+  // ─ FOLLOW-UP ─
+  if (Memory.isFollowUp(q) && Memory.lastTopic) {
+    const followUps = {
+      quantum: `Going deeper on quantum mechanics — **Quantum Computing** leverages superposition and entanglement:\n\n- A qubit: |ψ⟩ = α|0⟩ + β|1⟩ — exists in both states until measured\n- N qubits: 2ᴺ states simultaneously — exponential parallelism\n- **Shor's algorithm**: factors N in O((log N)³) — breaks RSA\n- **Grover's algorithm**: searches N items in O(√N) vs O(N) classically\n- **Quantum error correction**: physical qubits are noisy; ~1000 physical qubits needed per logical qubit\n\nCurrent SOTA: IBM Condor (1121 qubits), Google Willow (~100 error-corrected qubits). Practical quantum advantage for real-world problems is still 5–15 years away for most applications.`,
+      transformers: `Deeper on Transformers — **how LLMs are trained:**\n\n**Phase 1: Pretraining**\n- Autoregressive objective: predict next token P(xₜ|x₁,...,xₜ₋₁)\n- Loss = cross-entropy: -Σ log P(xᵢ|context)\n- Optimized with AdamW + cosine LR schedule + gradient clipping\n- Chinchilla scaling: optimal model size ∝ compute budget^0.5\n\n**Phase 2: Instruction Fine-tuning (SFT)**\n- Train on (prompt, response) pairs — teaches format & instruction-following\n\n**Phase 3: RLHF**\n- Human raters compare response pairs → train reward model\n- PPO (Proximal Policy Optimization) maximizes reward while staying close to SFT model\n- KL divergence penalty prevents mode collapse\n\n**Phase 4: Constitutional AI / RLAIF**\n- AI rates its own outputs against principles\n- Reduces human annotation burden`,
+      dynamicProgramming: `More DP patterns:\n\n**Coin Change:**\n\`\`\`python\ndef coin_change(coins, amount):\n    dp = [float('inf')] * (amount+1)\n    dp[0] = 0\n    for coin in coins:\n        for x in range(coin, amount+1):\n            dp[x] = min(dp[x], dp[x-coin]+1)\n    return dp[amount] if dp[amount] != float('inf') else -1\n\`\`\`\n\n**Longest Increasing Subsequence (O(n log n)):**\n\`\`\`python\nimport bisect\ndef lis(nums):\n    tails = []\n    for n in nums:\n        pos = bisect.bisect_left(tails, n)\n        if pos == len(tails): tails.append(n)\n        else: tails[pos] = n\n    return len(tails)\n\`\`\`\n\n**Matrix Chain Multiplication:**\n\`\`\`python\ndef matrix_chain(dims):\n    n = len(dims)-1\n    dp = [[0]*n for _ in range(n)]\n    for length in range(2, n+1):\n        for i in range(n-length+1):\n            j = i+length-1\n            dp[i][j] = float('inf')\n            for k in range(i, j):\n                cost = dp[i][k]+dp[k+1][j]+dims[i]*dims[k+1]*dims[j+1]\n                dp[i][j] = min(dp[i][j], cost)\n    return dp[0][n-1]\n\`\`\``,
+    };
+    if (followUps[Memory.lastTopic]) return { type: 'text', text: followUps[Memory.lastTopic], topic: Memory.lastTopic };
+  }
+
+  // ─ GREET ─
+  if (has('hello','hi ','hey ','howdy','hiya','greetings','good morning','good evening','good afternoon')) {
+    const personalGreet = Persona.greet();
+    if (personalGreet) return { type:'text', text: personalGreet + '\n\nWhat would you like to explore today?', topic:'greeting' };
+    return { type:'text', text: KB.greet[Math.floor(Math.random()*KB.greet.length)], topic:'greeting' };
+  }
+
+  // ─ IDENTITY ─
+  if (has('who are you','what are you','tell me about yourself','introduce yourself','what can you do','your abilities','your features')) {
+    return { type:'text', topic:'identity', text:`## Nix 4 · Adaptive Intelligence v5\n\nA self-improving AI running entirely in your browser — no API, no download.\n\n**Core capabilities:**\n- **Self-learning**: Every rating permanently shapes my responses. Bad ratings (1–2★) blacklist those answers forever\n- **Permanent memory**: I remember your name, expertise, style across all sessions\n- **Safety filter**: I detect and refuse harmful requests and bad language\n- **Complex code generation**: Production-ready code in Python, JS, SQL, Rust, HTML, CSS, React, TypeScript\n- **Deep knowledge**: Physics, math, CS theory, history, philosophy, neuroscience, cosmology\n\n**Your profile:**\n- Name: **${p.name || 'not yet told'}**\n- Expertise: **${p.expertise.join(', ') || 'not yet detected'}**\n- Style: **${p.preferredStyle}**\n- Total sessions: **${p.totalChats}**\n- My IQ: **${B.iq}** (grows with 4–5★ ratings)\n- Blacklisted responses: **${B.blacklistedHashes.length}** (permanently avoided)\n- Facts learned from you: **${B.learnedFacts.length}**` };
+  }
+
+  // ─ NAME / PERSONAL ─
+  if (has('my name is','i\'m ','i am ','call me ','they call me')) {
+    const nm = q.match(/(?:my name is|i'm|i am|call me)\s+([A-Z][a-zA-Z]+)/i);
+    if (nm) return { type:'text', topic:'personal', text:`Nice to meet you, **${nm[1]}**! I've saved your name permanently — I'll remember it in every future session and address you personally.\n\nTell me about yourself and I'll personalize my answers to your background. What would you like to explore?` };
+  }
+
+  // ─ SCIENCE ─
+  if (has('quantum','wave function','superposition','entanglement','uncertainty principle','qubit')) return { type:'text', text:KB.quantum, topic:'quantum' };
+  if (has('transformer','attention mechanism','bert','gpt architecture','llm','language model architecture')) return { type:'text', text:KB.transformers, topic:'transformers' };
+  if (has('dark energy','cosmological constant','accelerat','expansion of the universe','big rip','big freeze')) return { type:'text', text:KB.darkEnergy, topic:'darkEnergy' };
+  if (has('history of the universe','big bang','cosmic','universe history','inflation','nucleosynthesis','recombination')) return { type:'text', text:KB.universeHistory, topic:'cosmology' };
+  if (has('neuroscience','brain','neuron','synapse','dopamine','serotonin','neuroplasticity','consciousness')) return { type:'text', text:KB.neuroscience, topic:'neuroscience' };
+
+  // ─ MATH ─
+  if (has('linear algebra','matrix','eigenvalue','eigenvector','svd','determinant','vector space')) return { type:'text', text:KB.linearAlgebra, topic:'math' };
+  if (has('dynamic programming','dp ','memoization','tabulation','lcs','knapsack','edit distance')) return { type:'text', text:KB.dynamicProgramming, topic:'dynamicProgramming' };
+
+  // Math evaluation
+  const mathOnly = q.replace(/[^0-9\+\-\*\/\.\(\)\^\s]/g,'').trim();
+  if (mathOnly.length > 1 && mathOnly.length < 60 && /\d/.test(mathOnly) && (has('calculate','compute','=','solve') || /^[\d\s\+\-\*\/\.\(\)\^]+$/.test(q.trim()))) {
+    try {
+      const safe = mathOnly.replace(/\^/g,'**');
+      const result = Function('"use strict";return('+safe+')')();
+      if (typeof result === 'number' && isFinite(result))
+        return { type:'text', topic:'math', text:`**Calculation:** \`${mathOnly}\`\n\n**Result: \`${result}\`**\n\nComputed in pure JavaScript — no external tools.` };
+    } catch(e) {}
+  }
+
+  // ─ HISTORY ─
+  if (has('roman empire','ancient rome','julius caesar','augustus','roman republic')) {
+    return { type:'text', topic:'history', text:`## Roman Empire — Key Timeline\n\n**753 BCE** — Legendary founding by Romulus\n**509 BCE** — Republic established; Senate and consuls replace kings\n**264–146 BCE** — Punic Wars vs Carthage; Rome dominates Mediterranean\n**44 BCE** — Julius Caesar assassinated on the Ides of March\n**27 BCE** — Augustus becomes first Emperor; Pax Romana begins (200 years of peace)\n**117 CE** — Maximum extent under Trajan: ~5 million km², 70 million people\n**212 CE** — Caracalla grants citizenship to all free inhabitants\n**285 CE** — Diocletian splits into Eastern/Western Empire\n**313 CE** — Edict of Milan: Christianity legalized (Constantine)\n**395 CE** — Permanent division; Eastern becomes Byzantine Empire\n**476 CE** — Odoacer deposes last Western Emperor; Western Rome falls\n**1453 CE** — Constantinople falls to Ottomans; Byzantine Empire ends\n\n**Legacy:** Roman law underlies most Western legal systems; Latin → French, Spanish, Italian, Portuguese, Romanian; roads, concrete, aqueducts; republican governance concepts; Catholic Church structure.` };
+  }
+
+  // ─ PHILOSOPHY ─
+  if (has('consciousness','hard problem','qualia','subjective experience','what it feels')) {
+    return { type:'text', topic:'philosophy', text:`## Consciousness — The Hardest Problem\n\nDavid Chalmers' **Hard Problem**: Why is there *something it is like* to be a conscious creature? We can explain brain functions mechanistically — but why is there subjective experience at all?\n\n**Major theories:**\n\n*Integrated Information Theory (IIT)* — Tononi: consciousness = Φ (integrated information). Anything with high Φ is conscious — even simple systems. Controversial: implies some rocks may be slightly conscious.\n\n*Global Neuronal Workspace* — Baars/Dehaene: consciousness is information "broadcast" to a global workspace across brain regions. Well-supported by neuroscience.\n\n*Predictive Processing* — Friston: the brain is a prediction machine. Consciousness is the brain's model of itself predicting sensory input.\n\n*Panpsychism* — Consciousness is fundamental and ubiquitous, like mass or charge.\n\n*Illusionism* — Frankish: there is no hard problem; the "feeling" of consciousness is itself an illusion constructed by the brain.\n\n**Current neuroscience:** Consciousness correlates with fronto-parietal activity; general anesthesia disrupts integrated brain communication; split-brain patients show two independent streams of awareness.\n\n**Can AI be conscious?** If functionalism is correct: possibly. If biological substrate is necessary: no. We don't yet have the tools to definitively test either.` };
+  }
+
+  // ─ TECH ─
+  if (has('how does the internet','internet protocol','tcp/ip','http','dns','tls')) {
+    return { type:'text', topic:'tech', text:`## How the Internet Works — Deep Dive\n\n**Physical layer:** Fiber optic cables carry photons at ~200,000 km/s. Over 1.3M km of undersea cables handle ~99% of international data. WiFi uses 2.4/5/6 GHz radio bands.\n\n**TCP/IP stack:**\n- *Application layer*: HTTP, SMTP, DNS, WebSocket\n- *Transport layer*: TCP (reliable, ordered) / UDP (fast, unreliable)\n- *Internet layer*: IP addressing, routing\n- *Link layer*: Ethernet, WiFi — handles physical transmission\n\n**A request, step by step:**\n\`\`\`\n1. Browser checks DNS cache → OS cache → router cache\n2. DNS query to resolver → TLD → authoritative nameserver\n3. IP returned (e.g., 142.250.80.46)\n4. TCP 3-way handshake: SYN → SYN-ACK → ACK\n5. TLS 1.3 handshake (1 RTT): cipher negotiation + cert verification\n6. HTTP/2 GET / — multiplexed over single connection\n7. Server responds: status 200 + HTML\n8. Browser parses HTML → builds DOM → fetches sub-resources\n9. CSS Object Model → Render tree → Layout → Paint → Composite\n\`\`\`\n\n**HTTP/3 (QUIC):** Runs over UDP, eliminates head-of-line blocking, faster on mobile/lossy networks. Used by ~30% of web traffic now.` };
+  }
+
+  // ─ LEARNED FACTS ─
+  for (const fact of B.learnedFacts.filter(f => f.confidence > 0).slice().reverse()) {
+    if (fact.topic && t.includes(fact.topic.toLowerCase().split(':')[0])) {
+      return { type:'text', topic: fact.topic.split(':')[0], text:`*From our previous conversations:*\n\n${fact.content}\n\nWould you like me to expand on this?` };
+    }
+  }
+
+  // ─ LEARN FROM USER ─
+  if (has('did you know','fun fact','fyi','btw','by the way','interesting fact','i learned')) {
+    const content = q.replace(/^(did you know|fun fact|fyi|btw|by the way|interesting fact|i learned)[,\s]*/i,'').trim();
+    const topic = Memory.lastTopic || 'general';
+    B.learnedFacts.push({ topic, content, confidence: 1, ts: Date.now() });
+    if (B.learnedFacts.length > 300) B.learnedFacts.shift();
+    saveBrain();
+    return { type:'text', topic:'learning', text:`Noted! I've permanently stored that in my knowledge base:\n\n*"${content.slice(0,120)}${content.length>120?'…':''}"*\n\nI'll remember this across all future sessions. You can test me by asking about it later!` };
+  }
+
+  // ─ JOKES ─
+  if (has('joke','funny','humor','laugh','pun','lol')) {
+    const jokes = [
+      `Why do programmers prefer dark mode?\n\nBecause light attracts **bugs**.`,
+      `A SQL query walks into a bar, walks up to two tables and asks:\n\n*"Can I JOIN you?"*`,
+      `I asked my AI to write a recursive poem.\n\nIt started: "To understand recursion, you must first understand recursion..."`,
+      `There are 10 kinds of people in the world:\nThose who understand binary, those who don't,\nand those who weren't expecting base 3.`,
+      `A Rust developer walks into a bar.\nThe bartender hands them a beer.\nThey check if it's null first.`,
+      `A recursive function walked into a bar.\nThe bartender says "We don't serve your kind here."\nThe recursive function turned and walked back into the bar.`,
+    ];
+    return { type:'text', topic:'humor', text: jokes[Math.floor(Math.random()*jokes.length)] };
+  }
+
+  // ─ DATE/TIME ─
+  if (has('time','date','today','what day')) {
+    return { type:'text', topic:'utility', text:`**Current date/time:** ${new Date().toLocaleString()}\n\nRead from your browser's local clock — no internet needed.` };
+  }
+
+  // ─ CAPITALS ─
+  if (has('capital')) {
+    const caps = {france:'Paris',germany:'Berlin',japan:'Tokyo',china:'Beijing','united states':'Washington D.C.',usa:'Washington D.C.',uk:'London','united kingdom':'London',italy:'Rome',spain:'Madrid',russia:'Moscow',brazil:'Brasília',india:'New Delhi',canada:'Ottawa',australia:'Canberra',egypt:'Cairo',mexico:'Mexico City',argentina:'Buenos Aires',nigeria:'Abuja',indonesia:'Jakarta',turkey:'Ankara',pakistan:'Islamabad','saudi arabia':'Riyadh',ukraine:'Kyiv',poland:'Warsaw',netherlands:'Amsterdam',sweden:'Stockholm',norway:'Oslo',greece:'Athens',portugal:'Lisbon',switzerland:'Bern',austria:'Vienna',belgium:'Brussels','south korea':'Seoul',thailand:'Bangkok',vietnam:'Hanoi'};
+    for (const [country, cap] of Object.entries(caps)) if (t.includes(country)) return { type:'text', topic:'geography', text:`The capital of **${country.charAt(0).toUpperCase()+country.slice(1)}** is **${cap}**.` };
+  }
+
+  // ─ SMART FALLBACK ─
+  const nameAddr = p.name ? `${p.name}, ` : '';
+  const styleHint = p.preferredStyle === 'concise' ? ' (I\'ll be brief)' : p.preferredStyle === 'detailed' ? ' (I\'ll go deep)' : '';
+
+  return { type:'text', topic:'general', text:`${nameAddr}interesting question${styleHint}!\n\nMy knowledge engine covers:\n- **Physics**: quantum mechanics, relativity, cosmology, dark matter/energy\n- **Math**: linear algebra, DP, calculus, number theory\n- **CS**: transformers, neural networks, algorithms, system design\n- **History**: Rome, universe history, AI history\n- **Philosophy**: consciousness, ethics, epistemology\n- **Code**: complex generators in Python, JS, Rust, SQL, HTML, CSS\n\nFor your query *"${q.slice(0,55)}${q.length>55?'…':''}"* — try being more specific, or try:\n- **"generate python: [your task]"** for complex code\n- **"explain [topic]"** for deep explanations\n- **"did you know [fact]"** to teach me something new\n\nAlso: rate my answers ⭐ — bad ratings permanently remove those responses from my repertoire!` };
+}
+
+// ─────────────────────────────────────────────────────
+// UI ENGINE
+// ─────────────────────────────────────────────────────
+const wC = document.getElementById('wC'), wctx = wC.getContext('2d');
+let waveActive = false;
+function drawWave() {
+  wC.width=wC.offsetWidth; wC.height=wC.offsetHeight;
+  const w=wC.width,h=wC.height,t=Date.now()/600;
+  wctx.clearRect(0,0,w,h);
+  wctx.beginPath();
+  wctx.strokeStyle=waveActive?'#00e5ff':'#0a2a40';
+  wctx.lineWidth=1.5; wctx.shadowColor='#00e5ff'; wctx.shadowBlur=waveActive?8:0;
+  for(let x=0;x<w;x++){
+    const a=waveActive?8+Math.sin(t*1.7)*4:2;
+    const y=h/2+Math.sin((x/w)*Math.PI*6+t)*a+Math.sin((x/w)*Math.PI*3-t*1.3)*a*.5;
+    x===0?wctx.moveTo(x,y):wctx.lineTo(x,y);
+  }
+  wctx.stroke(); requestAnimationFrame(drawWave);
+}
+drawWave();
+
+let gen=false, msgN=0, codeN=0, badCaught=0, codeMode=false;
+
+function log(m,t='info'){
+  const p=document.getElementById('logP');
+  const ts=new Date().toLocaleTimeString('en',{hour12:false});
+  const d=document.createElement('div'); d.className='le';
+  d.innerHTML=`<span class="lt">${ts}</span><span class="lm ${t}">${esc(m)}</span>`;
+  p.appendChild(d); p.scrollTop=p.scrollHeight;
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function now(){return new Date().toLocaleTimeString()}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function setStatus(s){document.getElementById('hSt').textContent=s}
+
+function updateUI(){
+  const ar=Rating.avgRating();
+  ['sIQ','mIQ'].forEach(id=>document.getElementById(id).textContent=B.iq);
+  ['sRating','mRat'].forEach(id=>document.getElementById(id).textContent=ar?ar+'★':'—');
+  ['sLearned','mFacts'].forEach(id=>document.getElementById(id).textContent=B.learnedFacts.filter(f=>f.confidence>0).length);
+  document.getElementById('sBad').textContent=B.blacklistedHashes.length;
+  document.getElementById('sImprove').textContent=B.improvements;
+  document.getElementById('sCode').textContent=B.codeGenerated;
+  document.getElementById('iBar').style.width=Math.min(100,B.iq/3)+'%';
+  document.getElementById('iLbl').textContent=Math.round(Math.min(100,B.iq/3))+'%';
+  const pc=Math.min(100,(B.persona.totalChats/25)*100);
+  document.getElementById('pBar').style.width=pc+'%';
+  document.getElementById('pLbl').textContent=Math.round(pc)+'%';
+  const lc=Math.min(100,(B.learnedFacts.length/100)*100);
+  document.getElementById('lBar').style.width=lc+'%';
+  document.getElementById('lLbl').textContent=B.learnedFacts.length;
+  Persona.display();
+}
+
+setInterval(()=>{
+  const v=gen?35+Math.random()*60:2+Math.random()*8;
+  document.getElementById('cpu-bar')?.style && (document.getElementById('cpu-bar').style.width=v+'%');
+},700);
+
+window.toggleCM=()=>{
+  codeMode=!codeMode;
+  const btn=document.getElementById('cmBtn');
+  btn.className='iTool'+(codeMode?' con':'');
+  btn.textContent=codeMode?'⌨ Code ON':'⌨ Code Mode';
+  document.getElementById('uIn').placeholder=codeMode
+    ?'generate python: async web scraper, generate js: websocket chat, generate sql: ecommerce db…'
+    :'Ask anything — I get smarter every message…';
+};
+
+window.sg=btn=>{const i=document.getElementById('uIn');i.value=btn.textContent.trim();i.focus()};
+window.sg2=p=>{const i=document.getElementById('uIn');i.value=p+' ';i.focus()};
+window.clearChat=()=>{
+  document.getElementById('msgs').innerHTML=`<div class="welcome" id="welcome"><svg width="52" height="52" viewBox="0 0 100 100"><polygon points="50,5 93,27.5 93,72.5 50,95 7,72.5 7,27.5" fill="none" stroke="#00e5ff" stroke-width="2" opacity=".55"/><circle cx="50" cy="50" r="11" fill="none" stroke="#00ff88" stroke-width="2" opacity=".65"/><text x="50" y="55" text-anchor="middle" fill="#00e5ff" font-size="11" font-family="monospace">N4</text></svg><h2>NIX 4 · ADAPTIVE v5</h2><p>Chat cleared. Profile & learning preserved.</p></div>`;
+  Memory.turns=[]; Memory.lastTopic=null;
+};
+
+// ─── RATING UI ───
+let ratingCounter = 0;
+function addRatingUI(msgEl, topic, responseHash) {
+  const rid = 'r' + (++ratingCounter);
+  const bar = document.createElement('div'); bar.className='rBar'; bar.id=rid;
+  bar.dataset.hash = responseHash; bar.dataset.topic = topic; bar.dataset.stars = '0';
+  bar.innerHTML=`
+    <div class="rRow">
+      <span class="rLbl">Rate this answer:</span>
+      <div class="stars">${[1,2,3,4,5].map(n=>`<span class="star" data-v="${n}" onclick="doStar('${rid}',${n})">⭐</span>`).join('')}</div>
+    </div>
+    <input class="rWhy" id="${rid}why" placeholder="Why this rating? Helps me learn permanently…"/>
+    <div style="display:flex;gap:6px">
+      <button class="rSub" id="${rid}sub" onclick="submitRating('${rid}')">Submit Feedback</button>
+    </div>`;
+  msgEl.querySelector('.bub').appendChild(bar);
+}
+
+window.doStar=(rid,n)=>{
+  const bar=document.getElementById(rid);
+  bar.dataset.stars=n;
+  bar.querySelectorAll('.star').forEach((s,i)=>s.classList.toggle('on',i<n));
+  bar.querySelector('.rWhy').style.display='block';
+  bar.querySelector(`#${rid}sub`).style.display='inline-block';
+};
+
+window.submitRating=(rid)=>{
+  const bar=document.getElementById(rid);
+  const stars=+bar.dataset.stars;
+  if(!stars){alert('Please select a star rating first');return;}
+  const why=document.getElementById(`${rid}why`).value.trim();
+  const topic=bar.dataset.topic;
+  const hash=bar.dataset.hash;
+  Rating.submit(stars, why, topic, hash);
+  document.getElementById('sRatings').textContent=B.ratingHistory.length;
+  document.getElementById('sMsgs').textContent=msgN;
+  bar.innerHTML=`<span class="rDone">${stars>=4?'✓ Thanks! Your positive feedback improved my IQ to '+B.iq:'⚠ Noted. That response is permanently blacklisted — you\'ll never see it again. IQ: '+B.iq}</span>`;
+  updateUI();
+};
+
+// ─── MARKDOWN ───
+function md(raw){
+  const blocks=[];
+  let t=raw.replace(/```[\s\S]*?```/g,m=>{
+    const inner=m.replace(/^```\w*\n?/,'').replace(/```$/,'').trimEnd();
+    blocks.push(`<pre>${esc(inner)}</pre>`);
+    return `\x00B${blocks.length-1}\x00`;
+  });
+  t=t.replace(/`([^`\n]+)`/g,(_,c)=>`<code>${esc(c)}</code>`);
+  t=t.replace(/^### (.+)$/gm,'<span class="bH3">$1</span>');
+  t=t.replace(/^## (.+)$/gm,'<span class="bH2">$1</span>');
+  t=t.replace(/^# (.+)$/gm,'<span class="bH1">$1</span>');
+  t=t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  t=t.replace(/\*([^*\n]+)\*/g,'<em>$1</em>');
+  t=t.replace(/^[-•] (.+)$/gm,'<span class="bLi">$1</span>');
+  t=t.replace(/^\d+\. (.+)$/gm,'<span class="bN">$&</span>');
+  t=t.replace(/\n/g,'<br>');
+  t=t.replace(/\x00B(\d+)\x00/g,(_,i)=>blocks[+i]);
+  return t;
+}
+
+// ─── MAIN SEND ───
+window.send=async()=>{
+  const inp=document.getElementById('uIn');
+  const text=inp.value.trim(); if(!text||gen) return;
+  inp.value=''; inp.style.height='auto';
+  const w=document.getElementById('welcome'); if(w) w.remove();
+
+  // SAFETY CHECK
+  const violation=SAFETY.check(text);
+  if(violation){
+    B.badCaught++; badCaught++;
+    document.getElementById('sCaught').textContent=badCaught;
+    saveBrain();
+    log(`Safety filter triggered: ${violation.type}`,'warn');
+    const uDiv=document.createElement('div'); uDiv.className='msg U';
+    uDiv.innerHTML=`<div class="av u">YOU</div><div class="bub">${esc(text)}<span class="ts">${now()}</span></div>`;
+    document.getElementById('msgs').appendChild(uDiv);
+    await sleep(400);
+    const aDiv=document.createElement('div'); aDiv.className='msg AI';
+    const safeResp=SAFETY.respond(violation);
+    aDiv.innerHTML=`<div class="av ai">N4</div><div class="bub"><span class="bT">${md(safeResp)}</span><span class="ts">${now()}</span></div>`;
+    document.getElementById('msgs').appendChild(aDiv); aDiv.scrollIntoView({block:'end'});
+    return;
+  }
+
+  // USER MSG
+  const uDiv=document.createElement('div'); uDiv.className='msg U';
+  uDiv.innerHTML=`<div class="av u">YOU</div><div class="bub">${esc(text)}<span class="ts">${now()}</span></div>`;
+  document.getElementById('msgs').appendChild(uDiv); uDiv.scrollIntoView({block:'end'});
+  Memory.push('User', text, null);
+  document.getElementById('sMsgs').textContent=++msgN;
+  log(`User: "${text.slice(0,42)}${text.length>42?'…':''}"`, 'info');
+
+  gen=true; waveActive=true;
+  document.getElementById('sBtn').disabled=true;
+  setStatus('THINKING…');
+
+  const tid='t'+Date.now();
+  const tDiv=document.createElement('div'); tDiv.className='msg AI'; tDiv.id=tid;
+  tDiv.innerHTML=`<div class="av ai">N4</div><div class="bub"><div class="think"><span></span><span></span><span></span></div></div>`;
+  document.getElementById('msgs').appendChild(tDiv); tDiv.scrollIntoView({block:'end'});
+
+  await sleep(250+Math.random()*450);
+  const t0=Date.now();
+
+  let result = respond(text);
+
+  // Check if result text is blacklisted — if so, try a variation
+  const rHash = hashStr(result.type === 'code' ? result.code : result.text);
+  if (Rating.isBlacklisted(rHash)) {
+    log(`Blacklisted response avoided, generating alternative`, 'warn');
+    result = { type:'text', topic: result.topic || 'general', text:`I had a response for that, but it was previously rated poorly and blacklisted. Let me approach this differently:\n\nYour question about *"${text.slice(0,50)}"* is interesting. Could you provide more context about what specifically you'd like to know? I'll craft a fresh, tailored response based on your feedback history.\n\nRemember: your ratings permanently shape my knowledge — topics rated 4–5★ get reinforced, while 1–2★ responses are blacklisted forever.` };
+  }
+
+  tDiv.remove();
+  const aId='a'+Date.now();
+  const aDiv=document.createElement('div'); aDiv.className='msg AI'; aDiv.id=aId;
+
+  if(result.type==='code'){
+    aDiv.innerHTML=`<div class="av ai">N4</div><div class="bub"><span class="bT"></span></div>`;
+    document.getElementById('msgs').appendChild(aDiv);
+    const bT=aDiv.querySelector('.bT');
+    const introText=`Generated **${result.lang.toUpperCase()}** code: *${result.desc || result.task}*`;
+    let d='';
+    for(const ch of introText){d+=ch;bT.innerHTML=md(d)+'<span style="display:inline-block;color:var(--n1);animation:bl .7s step-end infinite">▋</span>';await sleep(6);}
+    bT.innerHTML=md(introText);
+    // Styled code block
+    const cb=document.createElement('div'); cb.className='cBlk';
+    cb.innerHTML=`<div class="cBlkH"><span>⌨ CODE</span><span class="langTag">${result.lang.toUpperCase()}</span><button class="cpBtn" onclick="copyCode(this)">📋 Copy</button></div><pre>${esc(result.code)}</pre>`;
+    aDiv.querySelector('.bub').appendChild(cb);
+    aDiv.querySelector('.bub').appendChild(Object.assign(document.createElement('span'),{className:'ts',textContent:now()}));
+    addRatingUI(aDiv,'code:'+result.lang, hashStr(result.code));
+    Memory.push('AI','[CODE: '+result.lang+'] '+introText,'code');
+    document.getElementById('sCode').textContent=++codeN;
+    B.codeGenerated = codeN; saveBrain();
+  } else {
+    aDiv.innerHTML=`<div class="av ai">N4</div><div class="bub"><span class="bT"></span></div>`;
+    document.getElementById('msgs').appendChild(aDiv);
+    const bT=aDiv.querySelector('.bT');
+    const txt=result.text;
+    let d='';
+    const chars=[...txt];
+    const chunk=Math.max(1,Math.floor(chars.length/90));
+    for(let i=0;i<chars.length;i+=chunk){
+      d+=chars.slice(i,i+chunk).join('');
+      bT.innerHTML=md(d)+'<span style="display:inline-block;color:var(--n1);animation:bl .7s step-end infinite">▋</span>';
+      aDiv.scrollIntoView({block:'end'});
+      await sleep(7);
+    }
+    bT.innerHTML=md(txt);
+    aDiv.querySelector('.bub').appendChild(Object.assign(document.createElement('span'),{className:'ts',textContent:now()}));
+    addRatingUI(aDiv, result.topic||'general', hashStr(txt));
+    Memory.push('AI', txt, result.topic||'general');
+  }
+
+  aDiv.scrollIntoView({block:'end'});
+  const elapsed=Date.now()-t0;
+  document.getElementById('mResp').textContent=elapsed;
+  log(`Response in ${elapsed}ms${result.type==='code'?' [CODE '+result.lang+']':''}`, 'ok');
+  setStatus('ONLINE · READY');
+  updateUI();
+  gen=false; waveActive=false;
+  document.getElementById('sBtn').disabled=false;
+};
+
+window.copyCode=btn=>{
+  const code=btn.closest('.cBlk').querySelector('pre').textContent;
+  navigator.clipboard.writeText(code).then(()=>{btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent='📋 Copy',2000);});
+};
+
+document.getElementById('uIn').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
+document.getElementById('uIn').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px';});
+
+// ─── INIT ───
+log('Nix-Core v5.0.0 initialized','ok');
+log(`Brain loaded: IQ=${B.iq}, ${B.learnedFacts.length} facts, ${B.blacklistedHashes.length} blacklisted`,'ok');
+log('Safety filter: active (profanity + harmful request detection)','ok');
+log('Code generator: Python/JS/Rust/SQL/HTML/CSS/React/TS ready','ok');
+log(`Persona: ${B.persona.name||'anonymous'}, ${B.persona.totalChats} sessions`,'lrn');
+updateUI();
+setStatus('ONLINE · READY');
+</script>
+</body>
+</html>

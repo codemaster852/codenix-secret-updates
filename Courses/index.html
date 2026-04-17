@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codenix Academy | Learn Programming</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .course-card:hover { transform: translateY(-5px); transition: all 0.3s ease; }
+        .glass-nav { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        .progress-ring { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
+        
+        .lesson-locked { opacity: 0.6; cursor: not-allowed !important; filter: grayscale(1); }
+        .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <!-- Navigation -->
+    <nav class="glass-nav fixed w-full z-50 border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="showView('home')">
+                    <div class="bg-blue-600 p-2 rounded-lg">
+                        <i class="fas fa-code text-white text-xl"></i>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight">Codenix Academy</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#" onclick="showView('home')" class="hover:text-blue-600 transition font-medium">Home</a>
+                    <a href="#" onclick="showView('courses')" class="hover:text-blue-600 transition font-medium">Courses</a>
+                </div>
+                <button onclick="showView('courses')" class="md:hidden bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-bold">Explore</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-20 min-h-screen">
+        
+        <!-- View: Home -->
+        <section id="view-home" class="view active">
+            <div class="max-w-7xl mx-auto px-4 py-16 text-center">
+                <h1 class="text-5xl md:text-7xl font-extrabold mb-6 text-gray-900 leading-tight">
+                    Level Up Your <br><span class="text-blue-600">Coding Journey</span>
+                </h1>
+                <p class="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
+                    Track your progress and master new skills through our organized lesson modules. Unlock new lessons as you go.
+                </p>
+                <button onclick="showView('courses')" class="bg-blue-600 text-white px-10 py-4 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition transform hover:scale-105">
+                    View My Courses
+                </button>
+            </div>
+        </section>
+
+        <!-- View: Course Catalog -->
+        <section id="view-courses" class="view hidden">
+            <div class="max-w-7xl mx-auto px-4 py-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
+                    <div>
+                        <h2 class="text-3xl font-bold">Course Catalog</h2>
+                        <p class="text-gray-500">Pick a course to start or resume</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                        <select id="categoryFilter" onchange="filterCourses()" class="bg-white border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="all">All Categories</option>
+                        </select>
+                        <input type="text" id="searchInput" onkeyup="filterCourses()" placeholder="Search courses..." class="w-full md:w-80 px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                </div>
+
+                <div id="loading" class="flex flex-col items-center py-20">
+                    <div class="loader mb-4"></div>
+                    <p class="text-gray-500">Loading your Academy dashboard...</p>
+                </div>
+
+                <div id="courseGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Unique Course Cards -->
+                </div>
+            </div>
+        </section>
+
+        <!-- View: Lesson List -->
+        <section id="view-lessons-list" class="view hidden">
+            <div class="max-w-5xl mx-auto px-4 py-8">
+                <button onclick="showView('courses')" class="text-blue-600 mb-6 flex items-center gap-2 hover:underline font-semibold">
+                    <i class="fas fa-arrow-left"></i> Back to Courses
+                </button>
+                <div id="courseHeader" class="mb-10 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
+                    <!-- Course details and progress bar injected here -->
+                </div>
+                <div id="lessonsGrid" class="space-y-4">
+                    <!-- Lessons injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- View: Lesson Detail -->
+        <section id="view-lesson" class="view hidden">
+            <div class="max-w-4xl mx-auto px-4 py-8">
+                <div class="flex justify-between items-center mb-6">
+                    <button id="backToLessonsBtn" class="text-blue-600 flex items-center gap-2 hover:underline font-semibold">
+                        <i class="fas fa-arrow-left"></i> Syllabus
+                    </button>
+                    <div id="lessonStatusTag"></div>
+                </div>
+                
+                <div id="lessonDetail" class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden mb-8"></div>
+
+                <!-- Navigation Controls -->
+                <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                    <button id="prevBtn" class="nav-btn bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-200 transition">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <div class="text-gray-400 font-medium text-sm hidden sm:block" id="navCounter"></div>
+                    <button id="nextBtn" class="nav-btn bg-blue-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 transition">
+                        Next <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const SHEET_ID = '1_puo8qnwlwSr7bIyK6TjgtDk5mcWlxhn1gAeteTTwDM';
+        const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
+
+        let groupedCourses = {}; 
+        let currentCourseName = '';
+        let currentLessonIndex = 0;
+        
+        // Progress Persistence via LocalStorage
+        let userProgress = JSON.parse(localStorage.getItem('codenix_progress') || '{}');
+
+        function saveProgress(course, lessonTitle) {
+            if (!userProgress[course]) userProgress[course] = [];
+            if (!userProgress[course].includes(lessonTitle)) {
+                userProgress[course].push(lessonTitle);
+                // Save immediately to localStorage
+                localStorage.setItem('codenix_progress', JSON.stringify(userProgress));
+            }
+        }
+
+        function getCourseProgress(courseName) {
+            const course = groupedCourses[courseName];
+            if (!userProgress[courseName] || !course) return 0;
+            // Progress = Completed lessons / (Total Lessons + 1 for Final Exam)
+            const total = course.lessons.length + 1; 
+            const completed = userProgress[courseName].length;
+            return Math.min(100, Math.round((completed / total) * 100));
+        }
+
+        function parseCSV(text) {
+            const rows = [];
+            let currentRow = [];
+            let currentCell = '';
+            let inQuotes = false;
+            for (let i = 0; i < text.length; i++) {
+                let char = text[i];
+                if (char === '"' && inQuotes && text[i+1] === '"') { currentCell += '"'; i++; }
+                else if (char === '"') inQuotes = !inQuotes;
+                else if (char === ',' && !inQuotes) { currentRow.push(currentCell); currentCell = ''; }
+                else if ((char === '\r' || char === '\n') && !inQuotes) {
+                    if (char === '\r' && text[i+1] === '\n') i++;
+                    currentRow.push(currentCell); rows.push(currentRow); currentRow = []; currentCell = '';
+                } else currentCell += char;
+            }
+            if (currentCell || currentRow.length > 0) { currentRow.push(currentCell); rows.push(currentRow); }
+            return rows;
+        }
+
+        async function init() {
+            try {
+                const response = await fetch(CSV_URL);
+                const data = await response.text();
+                const rows = parseCSV(data).slice(1);
+
+                groupedCourses = {};
+                rows.filter(r => r[1]).forEach(r => {
+                    const cName = r[1];
+                    if (!groupedCourses[cName]) {
+                        groupedCourses[cName] = {
+                            type: r[0],
+                            name: cName,
+                            cover: r[2],
+                            lessons: []
+                        };
+                    }
+                    groupedCourses[cName].lessons.push({
+                        title: r[3],
+                        cover: r[4],
+                        content: (r[5] || "").trim(),
+                        quiz: (r[6] || "").trim(),
+                        answer: (r[7] || "").trim(),
+                        image: (r[8] || "").trim()
+                    });
+                });
+
+                populateCategories();
+                renderCourseGrid(Object.values(groupedCourses));
+                document.getElementById('loading').classList.add('hidden');
+            } catch (e) {
+                console.error(e);
+                document.getElementById('loading').innerHTML = "Error loading data.";
+            }
+        }
+
+        function populateCategories() {
+            const categories = [...new Set(Object.values(groupedCourses).map(c => c.type))];
+            const select = document.getElementById('categoryFilter');
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat; opt.innerText = cat;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderCourseGrid(courses) {
+            const grid = document.getElementById('courseGrid');
+            grid.innerHTML = '';
+            courses.forEach(c => {
+                const progress = getCourseProgress(c.name);
+                const card = document.createElement('div');
+                card.className = 'course-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer';
+                card.onclick = () => openCourse(c.name);
+                card.innerHTML = `
+                    <div class="h-48 bg-gray-200 overflow-hidden relative">
+                        <img src="${c.cover}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/400x200?text=Codenix'">
+                        <div class="absolute bottom-0 left-0 w-full h-1 bg-gray-200">
+                            <div class="h-full bg-blue-600 transition-all duration-500" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded uppercase">${c.type}</span>
+                            <span class="text-xs font-bold text-gray-500">${progress}% Done</span>
+                        </div>
+                        <h3 class="text-xl font-bold">${c.name}</h3>
+                        <p class="text-gray-400 text-sm mt-1">${c.lessons.length + 1} Modules</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterCourses() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const cat = document.getElementById('categoryFilter');
+            const filtered = Object.values(groupedCourses).filter(c => {
+                return (cat.value === 'all' || c.type === cat.value) && c.name.toLowerCase().includes(query);
+            });
+            renderCourseGrid(filtered);
+        }
+
+        function openCourse(courseName) {
+            currentCourseName = courseName;
+            const course = groupedCourses[courseName];
+            const progress = getCourseProgress(courseName);
+            showView('lessons-list');
+            
+            document.getElementById('courseHeader').innerHTML = `
+                <div class="text-center md:text-left">
+                    <h1 class="text-4xl font-black mb-2">${course.name}</h1>
+                    <p class="text-gray-500">Syllabus • ${course.lessons.length + 1} Modules total</p>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <div class="relative inline-flex items-center justify-center">
+                        <svg class="w-20 h-20">
+                            <circle class="text-gray-100" stroke-width="8" stroke="currentColor" fill="transparent" r="30" cx="40" cy="40"/>
+                            <circle class="text-blue-600 progress-ring" stroke-width="8" stroke-dasharray="${2 * Math.PI * 30}" stroke-dashoffset="${(2 * Math.PI * 30) - (progress / 100) * (2 * Math.PI * 30)}" stroke-linecap="round" stroke="currentColor" fill="transparent" r="30" cx="40" cy="40"/>
+                        </svg>
+                        <span class="absolute text-sm font-bold">${progress}%</span>
+                    </div>
+                    <p class="text-xs font-bold text-gray-400 uppercase">Overall Progress</p>
+                </div>
+            `;
+
+            const list = document.getElementById('lessonsGrid');
+            list.innerHTML = '';
+            
+            course.lessons.forEach((l, i) => {
+                const isDone = userProgress[courseName]?.includes(l.title);
+                const isFirst = i === 0;
+                const prevDone = i > 0 && userProgress[courseName]?.includes(course.lessons[i-1].title);
+                const isLocked = !isFirst && !prevDone;
+
+                const item = createLessonItem(l, i, isDone, isLocked);
+                list.appendChild(item);
+            });
+
+            // Final Exam Item
+            const lastLessonTitle = course.lessons[course.lessons.length - 1].title;
+            const examLocked = !userProgress[courseName]?.includes(lastLessonTitle);
+            const examDone = userProgress[courseName]?.includes("FINAL_EXAM");
+            const examItem = createLessonItem({
+                title: "Course Final Exam",
+                cover: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=200",
+            }, course.lessons.length, examDone, examLocked, true);
+            list.appendChild(examItem);
+        }
+
+        function createLessonItem(l, i, isDone, isLocked, isExam = false) {
+            const item = document.createElement('div');
+            item.className = `p-4 rounded-xl border flex items-center gap-4 transition group ${isLocked ? 'lesson-locked' : 'hover:shadow-md cursor-pointer'} ${isDone ? 'bg-green-50 border-green-100' : 'bg-white border-gray-100'}`;
+            
+            if (!isLocked) {
+                item.onclick = () => isExam ? openFinalExam() : openLesson(i);
+            }
+
+            item.innerHTML = `
+                <div class="w-14 h-14 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0 relative">
+                    <img src="${l.cover}" class="w-full h-full object-cover">
+                    ${isDone ? '<div class="absolute inset-0 bg-green-600/20 flex items-center justify-center text-green-600"><i class="fas fa-check-circle text-xl"></i></div>' : ''}
+                    ${isLocked ? '<div class="absolute inset-0 bg-gray-900/40 flex items-center justify-center text-white"><i class="fas fa-lock text-sm"></i></div>' : ''}
+                </div>
+                <div class="flex-grow">
+                    <h4 class="font-bold text-lg ${isDone ? 'text-green-800' : ''}">${isExam ? '<i class="fas fa-graduation-cap mr-2"></i>' : ''}${l.title}</h4>
+                    <p class="text-xs text-gray-400 uppercase">${isExam ? 'Final Assessment' : 'Module ' + (i+1)}</p>
+                </div>
+                ${!isLocked ? `<div class="text-blue-600 opacity-0 group-hover:opacity-100 transition"><i class="fas fa-chevron-right"></i></div>` : ''}
+            `;
+            return item;
+        }
+
+        function openLesson(lessonIndex) {
+            currentLessonIndex = lessonIndex;
+            const course = groupedCourses[currentCourseName];
+            const lesson = course.lessons[lessonIndex];
+            const isDone = userProgress[currentCourseName]?.includes(lesson.title);
+            
+            showView('lesson');
+            updateNavigation(lessonIndex, course.lessons.length);
+
+            document.getElementById('lessonStatusTag').innerHTML = isDone 
+                ? '<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold"><i class="fas fa-check mr-1"></i> Completed</span>' 
+                : '<span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">In Progress</span>';
+
+            let lessonHTML = `
+                <div class="h-64 md:h-80 bg-gray-100"><img src="${lesson.cover}" class="w-full h-full object-cover"></div>
+                <div class="p-8 md:p-12">
+                    <h1 class="text-4xl font-black mb-6">${lesson.title}</h1>
+            `;
+
+            if (lesson.content && lesson.content !== 'No available') {
+                lessonHTML += `<div class="prose max-w-none text-gray-700 space-y-6 text-lg leading-relaxed mb-10">${lesson.content.split('\n').map(p => `<p>${p}</p>`).join('')}</div>`;
+            }
+
+            if (lesson.image && lesson.image !== 'No available' && lesson.image.length > 5) {
+                lessonHTML += `<img src="${lesson.image}" class="rounded-2xl w-full mb-10 shadow-lg border border-gray-100">`;
+            }
+            
+            if (lesson.quiz && lesson.quiz !== 'No available' && lesson.quiz.length > 1) {
+                lessonHTML += `
+                    <div id="quizSection" class="bg-gray-50 p-8 rounded-3xl border border-gray-200">
+                        <h3 class="text-2xl font-bold mb-4 flex items-center gap-2"><i class="fas fa-terminal text-blue-600"></i> Knowledge Check</h3>
+                        <p class="text-gray-600 text-lg mb-8">${lesson.quiz.replace(/\n/g, '<br>')}</p>
+                        <div id="quizOptions" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            ${['A', 'B', 'C', 'D'].map(opt => `
+                                <button onclick="handleQuiz(this, '${opt}', '${lesson.answer}', '${lesson.title}')" 
+                                class="bg-white p-5 border-2 border-gray-100 rounded-2xl font-bold text-left hover:border-blue-500 hover:bg-blue-50 transition flex items-center gap-4">
+                                    <span class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm">${opt}</span>
+                                    Option ${opt}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <div id="quizFeedback" class="mt-6 hidden p-4 rounded-xl font-bold text-center"></div>
+                    </div>
+                `;
+            } else {
+                lessonHTML += `
+                    <div id="completeSection" class="mt-10 pt-10 border-t border-gray-100 flex justify-center">
+                        <button id="markCompleteBtn" onclick="manualComplete('${lesson.title}')" 
+                            class="${isDone ? 'bg-green-100 text-green-700 cursor-default' : 'bg-blue-600 text-white hover:bg-blue-700'} px-10 py-4 rounded-2xl font-bold flex items-center gap-3 transition shadow-lg">
+                            ${isDone ? '<i class="fas fa-check-circle"></i> Lesson Completed' : '<i class="fas fa-check"></i> Mark as Completed'}
+                        </button>
+                    </div>
+                `;
+            }
+
+            lessonHTML += `</div>`;
+            document.getElementById('lessonDetail').innerHTML = lessonHTML;
+        }
+
+        function manualComplete(lessonTitle) {
+            saveProgress(currentCourseName, lessonTitle);
+            const btn = document.getElementById('markCompleteBtn');
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> Lesson Completed';
+            btn.className = 'bg-green-100 text-green-700 px-10 py-4 rounded-2xl font-bold flex items-center gap-3 transition shadow-sm cursor-default';
+            btn.onclick = null;
+            document.getElementById('lessonStatusTag').innerHTML = '<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold"><i class="fas fa-check mr-1"></i> Completed</span>';
+            updateNavigation(currentLessonIndex, groupedCourses[currentCourseName].lessons.length);
+        }
+
+        function openFinalExam() {
+            const course = groupedCourses[currentCourseName];
+            const isDone = userProgress[currentCourseName]?.includes("FINAL_EXAM");
+            showView('lesson');
+            
+            updateNavigation(course.lessons.length, course.lessons.length);
+
+            document.getElementById('lessonStatusTag').innerHTML = isDone 
+                ? '<span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold"><i class="fas fa-award mr-1"></i> Exam Passed</span>' 
+                : '<span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">Certification Exam</span>';
+
+            let examHTML = `
+                <div class="p-8 md:p-12">
+                    <div class="text-center mb-10">
+                        <i class="fas fa-graduation-cap text-6xl text-blue-600 mb-4"></i>
+                        <h1 class="text-4xl font-black mb-2">Course Final Exam</h1>
+                        <p class="text-gray-500">Answer all questions correctly from previous modules to finish the course.</p>
+                    </div>
+                    <div class="space-y-8" id="examContainer">
+            `;
+
+            let hasQuizzes = false;
+            course.lessons.forEach((l, idx) => {
+                if (l.quiz && l.quiz !== 'No available' && l.quiz.length > 1) {
+                    hasQuizzes = true;
+                    examHTML += `
+                        <div class="bg-white p-6 rounded-2xl border border-gray-200 quiz-block" data-answer="${l.answer}" data-idx="${idx}">
+                            <p class="font-bold mb-4 text-gray-800">Q${idx+1}: ${l.quiz.replace(/\n/g, '<br>')}</p>
+                            <div class="grid grid-cols-2 gap-3">
+                                ${['A', 'B', 'C', 'D'].map(opt => `
+                                    <button onclick="selectExamOption(this, '${opt}')" 
+                                    class="exam-opt-btn bg-gray-50 p-3 border-2 border-gray-100 rounded-xl font-bold hover:border-blue-300 transition">${opt}</button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            if (!hasQuizzes) {
+                examHTML += `<div class="text-center p-10 bg-gray-50 rounded-2xl border-2 border-dashed">No quizzes found in this course. Simply click submit to graduate.</div>`;
+            }
+
+            examHTML += `
+                    <button onclick="submitExam()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-xl shadow-lg hover:bg-blue-700 mt-10">Submit Final Exam</button>
+                    <div id="examError" class="hidden mt-4 text-red-600 font-bold text-center">Please answer all questions first!</div>
+                </div></div>
+            `;
+            document.getElementById('lessonDetail').innerHTML = examHTML;
+        }
+
+        function selectExamOption(btn, opt) {
+            const parent = btn.closest('.quiz-block');
+            parent.querySelectorAll('.exam-opt-btn').forEach(b => b.classList.remove('border-blue-600', 'bg-blue-50'));
+            btn.classList.add('border-blue-600', 'bg-blue-50');
+            parent.dataset.selected = opt;
+        }
+
+        function submitExam() {
+            const blocks = document.querySelectorAll('.quiz-block');
+            let allCorrect = true;
+            let missing = false;
+
+            blocks.forEach(b => {
+                const sel = b.dataset.selected;
+                const cor = b.dataset.answer;
+                if (!sel) missing = true;
+                if (sel !== cor) allCorrect = false;
+            });
+
+            if (missing) {
+                const err = document.getElementById('examError');
+                err.classList.remove('hidden');
+                setTimeout(() => err.classList.add('hidden'), 3000);
+                return;
+            }
+
+            if (allCorrect) {
+                saveProgress(currentCourseName, "FINAL_EXAM");
+                alert("Congratulations! You passed the final exam and finished the course.");
+                openCourse(currentCourseName);
+            } else {
+                alert("Some answers are incorrect. Review the course material and try again.");
+            }
+        }
+
+        function updateNavigation(idx, total) {
+            const prev = document.getElementById('prevBtn');
+            const next = document.getElementById('nextBtn');
+            const counter = document.getElementById('navCounter');
+
+            prev.disabled = idx === 0;
+            prev.onclick = () => openLesson(idx - 1);
+
+            if (idx < total - 1) {
+                const isLocked = !userProgress[currentCourseName]?.includes(groupedCourses[currentCourseName].lessons[idx].title);
+                next.disabled = isLocked;
+                next.onclick = () => openLesson(idx + 1);
+                next.innerHTML = `Next <i class="fas fa-arrow-right ml-2"></i>`;
+            } else if (idx === total - 1) {
+                const isLocked = !userProgress[currentCourseName]?.includes(groupedCourses[currentCourseName].lessons[idx].title);
+                next.disabled = isLocked;
+                next.onclick = () => openFinalExam();
+                next.innerHTML = `Final Exam <i class="fas fa-graduation-cap ml-2"></i>`;
+            } else {
+                next.disabled = true;
+                next.innerHTML = `End of Course`;
+            }
+
+            counter.innerText = `Module ${idx + 1} of ${total + 1}`;
+            document.getElementById('backToLessonsBtn').onclick = () => openCourse(currentCourseName);
+        }
+
+        function handleQuiz(btn, selected, correct, lessonTitle) {
+            const feedback = document.getElementById('quizFeedback');
+            const sel = selected.trim().toUpperCase();
+            const cor = (correct || "A").trim().toUpperCase();
+
+            if (sel === cor) {
+                feedback.innerHTML = `Correct! Next module unlocked.`;
+                feedback.className = "mt-6 p-4 rounded-xl font-bold text-center bg-green-100 text-green-700 block";
+                btn.classList.add('border-green-500', 'bg-green-50');
+                saveProgress(currentCourseName, lessonTitle);
+                updateNavigation(currentLessonIndex, groupedCourses[currentCourseName].lessons.length);
+            } else {
+                feedback.innerHTML = `Incorrect. Try again!`;
+                feedback.className = "mt-6 p-4 rounded-xl font-bold text-center bg-red-100 text-red-700 block";
+                btn.classList.add('border-red-500', 'bg-red-50');
+                setTimeout(() => {
+                    btn.classList.remove('border-red-500', 'bg-red-50');
+                    feedback.classList.add('hidden');
+                }, 2000);
+            }
+        }
+
+        function showView(v) {
+            document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
+            document.getElementById('view-' + v).classList.remove('hidden');
+            window.scrollTo(0,0);
+            if(v === 'courses') renderCourseGrid(Object.values(groupedCourses));
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
