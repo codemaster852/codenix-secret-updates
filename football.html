@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pro Soccer XL - Cloud Stadium</title>
+    <style>
+        :root {
+            --sky-blue: #1a2a6c;
+            --grass-green: #2ecc71;
+            --player-color: #e74c3c;
+            --ai-color: #f1c40f;
+            --ui-bg: rgba(0, 0, 0, 0.95);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            color: white;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #game-container {
+            position: relative;
+            box-shadow: 0 0 100px rgba(0, 0, 0, 1);
+            border: 6px solid #333;
+            background: #111;
+            border-radius: 12px;
+            overflow: hidden;
+            max-width: 95vw;
+        }
+
+        canvas {
+            display: block;
+            background: linear-gradient(to bottom, #1a2a6c, #b21f1f, #fdbb2d);
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--ui-bg);
+            z-index: 100;
+            text-align: center;
+        }
+
+        .menu-btn {
+            background: white;
+            color: black;
+            border: none;
+            padding: 15px 40px;
+            margin: 10px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            width: 250px;
+        }
+
+        .menu-btn:hover { background: #eee; transform: scale(1.05); }
+        .menu-btn.accent { background: var(--ai-color); }
+
+        .hidden { display: none !important; }
+
+        .score-board {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .team-box {
+            padding: 10px 30px;
+            min-width: 120px;
+            text-align: center;
+            border: 2px solid white;
+        }
+
+        .timer-box {
+            background: #000;
+            padding: 10px 25px;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #0f0;
+            border: 2px solid white;
+            min-width: 80px;
+        }
+
+        #mobile-controller {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #111;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            z-index: 1000;
+        }
+
+        .d-pad {
+            display: grid;
+            grid-template-areas: ". up ." "left . right" ". down .";
+            gap: 15px;
+            padding: 30px;
+        }
+
+        .ctrl-btn {
+            background: rgba(255,255,255,0.1);
+            border: 3px solid white;
+            color: white;
+            border-radius: 50%;
+            width: 90px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .ctrl-btn:active { background: rgba(255,255,255,0.4); }
+
+        #room-display {
+            font-family: monospace;
+            font-size: 3rem;
+            color: var(--ai-color);
+            margin: 20px 0;
+            letter-spacing: 10px;
+            background: #222;
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div class="score-board">
+            <div id="p1-ui" class="team-box" style="background: var(--player-color); border-radius: 10px 0 0 10px;">
+                <div style="font-size: 0.8rem;">PLAYER 1</div>
+                <div id="p-score" style="font-size: 2rem;">0</div>
+            </div>
+            <div class="timer-box" id="timer">60</div>
+            <div id="p2-ui" class="team-box" style="background: var(--ai-color); color: black; border-radius: 0 10px 10px 0;">
+                <div id="p2-label" style="font-size: 0.8rem;">PRO CPU</div>
+                <div id="c-score" style="font-size: 2rem;">0</div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="ui-overlay">
+            <h1 id="menu-title" style="font-size: 3rem; margin-bottom: 30px;">PRO SOCCER XL</h1>
+            
+            <div id="main-menu">
+                <button class="menu-btn" onclick="startMode('SOLO')">VS COMPUTER</button>
+                <button class="menu-btn accent" onclick="showScreenMode()">SCREEN MODE (STADIUM)</button>
+                <button class="menu-btn" onclick="startMode('ONLINE')">ONLINE MULTIPLAYER</button>
+            </div>
+
+            <div id="room-menu" class="hidden">
+                <h2>STADIUM READY</h2>
+                <p>Open this URL on your phone:</p>
+                <p id="room-url" style="font-size: 0.8rem; color: #888; word-break: break-all; margin: 10px;"></p>
+                <div id="room-display">----</div>
+                <p id="room-status">Waiting for Players (0/2)...</p>
+                <button class="menu-btn" onclick="cancelMode()">CANCEL</button>
+            </div>
+
+            <div id="online-menu" class="hidden">
+                <h2 id="online-status">FINDING MATCH...</h2>
+                <button class="menu-btn" style="margin-top:20px" onclick="cancelMode()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mobile-controller" class="hidden">
+        <div class="d-pad">
+            <div style="grid-area: up" class="ctrl-btn" ontouchstart="handleTouch('ArrowUp', true)" ontouchend="handleTouch('ArrowUp', false)">▲</div>
+            <div style="grid-area: left" class="ctrl-btn" ontouchstart="handleTouch('ArrowLeft', true)" ontouchend="handleTouch('ArrowLeft', false)">◀</div>
+            <div style="grid-area: right" class="ctrl-btn" ontouchstart="handleTouch('ArrowRight', true)" ontouchend="handleTouch('ArrowRight', false)">▶</div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-direction: column;">
+            <div class="ctrl-btn" style="background: #e74c3c; width: 110px; height: 110px;" ontouchstart="handleTouch('Space', true)" ontouchend="handleTouch('Space', false)">KICK</div>
+            <div class="ctrl-btn" style="background: #3498db;" ontouchstart="handleTouch('ShiftLeft', true)" ontouchend="handleTouch('ShiftLeft', false)">DASH</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, collection, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-soccer-app';
+
+        let gameMode = 'MENU'; 
+        let isHost = false;
+        let myPlayerIdx = 0; 
+        let roomId = null;
+        let currentUser = null;
+        let players = [
+            { x: 250, y: 520, vx: 0, vy: 0, r: 38, color: '#e74c3c', keys: {}, score: 0 },
+            { x: 950, y: 520, vx: 0, vy: 0, r: 38, color: '#f1c40f', keys: {}, score: 0 }
+        ];
+        let ball = { x: 600, y: 300, vx: 0, vy: 0, r: 16 };
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const W = 1200, H = 600, GROUND_Y = 520;
+        canvas.width = W; canvas.height = H;
+
+        // Firebase Path Helper (CRITICAL FIX FOR PERMISSIONS)
+        const getRoomDoc = (id) => doc(db, 'artifacts', appId, 'public', 'data', 'rooms', id);
+
+        // Auth initialization logic
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (!user) initAuth();
+            else checkUrlParams();
+        });
+
+        function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const join = urlParams.get('join');
+            if (join) {
+                roomId = join;
+                document.getElementById('game-container').classList.add('hidden');
+                document.getElementById('mobile-controller').classList.remove('hidden');
+                joinRoomAsController();
+            }
+        }
+
+        async function joinRoomAsController() {
+            if (!currentUser) return;
+            const roomRef = getRoomDoc(roomId);
+            await updateDoc(roomRef, {
+                [`players.${currentUser.uid}`]: { keys: {} }
+            });
+        }
+
+        window.handleTouch = (key, state) => {
+            if (!roomId || !currentUser) return;
+            const roomRef = getRoomDoc(roomId);
+            updateDoc(roomRef, {
+                [`players.${currentUser.uid}.keys.${key}`]: state
+            }).catch(e => console.error(e));
+        };
+
+        window.startMode = (mode) => {
+            gameMode = mode;
+            if (mode === 'SOLO') {
+                document.getElementById('ui-overlay').classList.add('hidden');
+                resetGame();
+            } else if (mode === 'ONLINE') {
+                findOnlineMatch();
+            }
+        };
+
+        window.showScreenMode = async () => {
+            if (!currentUser) return;
+            gameMode = 'SCREEN';
+            roomId = Math.floor(1000 + Math.random() * 9000).toString();
+            document.getElementById('room-display').textContent = roomId;
+            document.getElementById('room-url').textContent = window.location.href + "?join=" + roomId;
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('room-menu').classList.remove('hidden');
+            
+            isHost = true;
+            const roomRef = getRoomDoc(roomId);
+            await setDoc(roomRef, { 
+                status: 'waiting', 
+                players: {}, 
+                ball: {x:W/2, y:H/2}, 
+                lastUpdate: Date.now() 
+            });
+
+            onSnapshot(roomRef, (snap) => {
+                const data = snap.data();
+                if (!data) return;
+                const pKeys = Object.keys(data.players || {});
+                document.getElementById('room-status').textContent = `Waiting for Players (${pKeys.length}/2)...`;
+                
+                pKeys.forEach((uid, idx) => {
+                    if (idx < 2) players[idx].keys = data.players[uid].keys || {};
+                });
+
+                if (pKeys.length === 2 && data.status === 'waiting') {
+                    document.getElementById('ui-overlay').classList.add('hidden');
+                    resetGame();
+                    updateDoc(roomRef, { status: 'playing' });
+                }
+            }, (err) => console.error("Permission Error:", err));
+        };
+
+        function resetGame() {
+            ball = { x: W/2, y: H/3, vx: 0, vy: 0, r: 16 };
+            players[0].x = 250; players[1].x = 950;
+            players.forEach(p => { p.y = GROUND_Y; p.vx = p.vy = 0; });
+        }
+
+        function update() {
+            if (gameMode === 'MENU' || document.getElementById('ui-overlay').classList.contains('hidden') === false && gameMode !== 'SCREEN') return;
+
+            if (gameMode === 'SOLO') {
+                players[0].keys['ArrowLeft'] = window.keys['ArrowLeft'] || window.keys['KeyA'];
+                players[0].keys['ArrowRight'] = window.keys['ArrowRight'] || window.keys['KeyD'];
+                players[0].keys['ArrowUp'] = window.keys['ArrowUp'] || window.keys['KeyW'];
+                players[1].keys['ArrowLeft'] = ball.x < players[1].x - 30;
+                players[1].keys['ArrowRight'] = ball.x > players[1].x + 30;
+                players[1].keys['ArrowUp'] = ball.y < players[1].y - 100 && Math.abs(ball.x - players[1].x) < 50;
+            }
+
+            if (isHost || gameMode === 'SOLO') {
+                players.forEach(p => {
+                    if (p.keys['ArrowLeft']) p.vx = -7;
+                    else if (p.keys['ArrowRight']) p.vx = 7;
+                    else p.vx *= 0.8;
+                    if (p.keys['ArrowUp'] && p.y === GROUND_Y) p.vy = -15;
+                    p.vy += 0.6; p.x += p.vx; p.y += p.vy;
+                    if (p.y > GROUND_Y) { p.y = GROUND_Y; p.vy = 0; }
+                    p.x = Math.max(40, Math.min(W-40, p.x));
+
+                    const dx = ball.x - p.x, dy = ball.y - (p.y - 60);
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < ball.r + p.r) {
+                        const ang = Math.atan2(dy, dx);
+                        ball.vx = Math.cos(ang) * 12 + p.vx * 0.5;
+                        ball.vy = Math.sin(ang) * 12 + p.vy * 0.5;
+                    }
+                });
+
+                ball.vy += 0.5; ball.x += ball.vx; ball.y += ball.vy;
+                if (ball.y > GROUND_Y - ball.r) { ball.y = GROUND_Y - ball.r; ball.vy *= -0.7; ball.vx *= 0.98; }
+                if (ball.x < ball.r || ball.x > W-ball.r) { ball.vx *= -0.7; ball.x = (ball.x < ball.r) ? ball.r : W-ball.r; }
+                
+                if (ball.y > GROUND_Y - 160) {
+                    if (ball.x < 80) { players[1].score++; resetGame(); }
+                    if (ball.x > W-80) { players[0].score++; resetGame(); }
+                }
+            }
+
+            document.getElementById('p-score').textContent = players[0].score;
+            document.getElementById('c-score').textContent = players[1].score;
+        }
+
+        function draw() {
+            ctx.fillStyle = '#1a2a6c'; ctx.fillRect(0,0,W,H);
+            ctx.fillStyle = '#2ecc71'; ctx.fillRect(0, GROUND_Y, W, 80);
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 4;
+            ctx.strokeRect(0, GROUND_Y-160, 80, 160);
+            ctx.strokeRect(W-80, GROUND_Y-160, 80, 160);
+            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2); ctx.fill();
+            players.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.beginPath(); ctx.roundRect(p.x-25, p.y-50, 50, 45, 10); ctx.fill();
+                ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(p.x, p.y-75, 40, 0, Math.PI*2); ctx.fill();
+            });
+        }
+
+        function loop() { update(); draw(); requestAnimationFrame(loop); }
+        loop();
+
+        window.keys = {};
+        window.addEventListener('keydown', e => window.keys[e.code] = true);
+        window.addEventListener('keyup', e => window.keys[e.code] = false);
+        window.cancelMode = () => location.reload();
+
+    </script>
+</body>
+</html>
