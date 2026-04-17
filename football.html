@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pro Soccer XL - Cloud Stadium</title>
+    <!-- Include QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root {
             --sky-blue: #1a2a6c;
@@ -144,11 +146,23 @@
             font-family: monospace;
             font-size: 3rem;
             color: var(--ai-color);
-            margin: 20px 0;
+            margin: 10px 0;
             letter-spacing: 10px;
             background: #222;
             padding: 10px 20px;
             border-radius: 10px;
+        }
+
+        #qrcode-container {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px auto;
+            width: 150px;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
@@ -170,7 +184,7 @@
         <canvas id="gameCanvas"></canvas>
 
         <div id="ui-overlay">
-            <h1 id="menu-title" style="font-size: 3rem; margin-bottom: 30px;">PRO SOCCER XL</h1>
+            <h1 id="menu-title" style="font-size: 3rem; margin-bottom: 20px;">PRO SOCCER XL</h1>
             
             <div id="main-menu">
                 <button class="menu-btn" onclick="startMode('SOLO')">VS COMPUTER</button>
@@ -179,9 +193,13 @@
             </div>
 
             <div id="room-menu" class="hidden">
-                <h2>STADIUM READY</h2>
-                <p>Open this URL on your phone:</p>
-                <p id="room-url" style="font-size: 0.8rem; color: #888; word-break: break-all; margin: 10px;"></p>
+                <h2 style="margin: 0;">STADIUM READY</h2>
+                <p style="margin: 5px 0;">Scan to Join as Controller:</p>
+                
+                <div id="qrcode-container">
+                    <div id="qrcode"></div>
+                </div>
+
                 <div id="room-display">----</div>
                 <p id="room-status">Waiting for Players (0/2)...</p>
                 <button class="menu-btn" onclick="cancelMode()">CANCEL</button>
@@ -219,7 +237,6 @@
 
         let gameMode = 'MENU'; 
         let isHost = false;
-        let myPlayerIdx = 0; 
         let roomId = null;
         let currentUser = null;
         let players = [
@@ -232,10 +249,8 @@
         const W = 1200, H = 600, GROUND_Y = 520;
         canvas.width = W; canvas.height = H;
 
-        // Firebase Path Helper (CRITICAL FIX FOR PERMISSIONS)
         const getRoomDoc = (id) => doc(db, 'artifacts', appId, 'public', 'data', 'rooms', id);
 
-        // Auth initialization logic
         const initAuth = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 await signInWithCustomToken(auth, __initial_auth_token);
@@ -291,8 +306,22 @@
             if (!currentUser) return;
             gameMode = 'SCREEN';
             roomId = Math.floor(1000 + Math.random() * 9000).toString();
+            
+            // Clear and Generate QR Code
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            const joinUrl = window.location.href.split('?')[0] + "?join=" + roomId;
+            
+            new QRCode(qrContainer, {
+                text: joinUrl,
+                width: 150,
+                height: 150,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
             document.getElementById('room-display').textContent = roomId;
-            document.getElementById('room-url').textContent = window.location.href + "?join=" + roomId;
             document.getElementById('main-menu').classList.add('hidden');
             document.getElementById('room-menu').classList.remove('hidden');
             
@@ -323,6 +352,51 @@
             }, (err) => console.error("Permission Error:", err));
         };
 
+        async function findOnlineMatch() {
+            if (!currentUser) return;
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('online-menu').classList.remove('hidden');
+            
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'rooms'), where('status', '==', 'lobby'));
+            const querySnapshot = await getDocs(q);
+            
+            if (querySnapshot.empty) {
+                roomId = Math.random().toString(36).substring(7);
+                isHost = true;
+                const roomRef = getRoomDoc(roomId);
+                await setDoc(roomRef, { 
+                    status: 'lobby', 
+                    players: { [currentUser.uid]: { keys: {} } },
+                    ball: { x: W/2, y: H/2, vx: 0, vy: 0 },
+                    scores: { p1: 0, p2: 0 },
+                    lastUpdate: Date.now()
+                });
+                onSnapshot(roomRef, (snap) => {
+                    const data = snap.data();
+                    if(data && data.status === 'playing') document.getElementById('ui-overlay').classList.add('hidden');
+                });
+            } else {
+                const roomDoc = querySnapshot.docs[0];
+                roomId = roomDoc.id;
+                isHost = false;
+                const roomRef = getRoomDoc(roomId);
+                await updateDoc(roomRef, {
+                    [`players.${currentUser.uid}`]: { keys: {} },
+                    status: 'playing'
+                });
+                onSnapshot(roomRef, (snap) => {
+                    const data = snap.data();
+                    if(data && data.status === 'playing'){
+                        ball.x = data.ball.x; ball.y = data.ball.y;
+                        if(data.p1) { players[0].x = data.p1.x; players[0].y = data.p1.y; }
+                        if(data.p2) { players[1].x = data.p2.x; players[1].y = data.p2.y; }
+                        players[0].score = data.scores.p1; players[1].score = data.scores.p2;
+                        document.getElementById('ui-overlay').classList.add('hidden');
+                    }
+                });
+            }
+        }
+
         function resetGame() {
             ball = { x: W/2, y: H/3, vx: 0, vy: 0, r: 16 };
             players[0].x = 250; players[1].x = 950;
@@ -330,7 +404,8 @@
         }
 
         function update() {
-            if (gameMode === 'MENU' || document.getElementById('ui-overlay').classList.contains('hidden') === false && gameMode !== 'SCREEN') return;
+            const isUIVisible = !document.getElementById('ui-overlay').classList.contains('hidden');
+            if (gameMode === 'MENU' || (isUIVisible && gameMode !== 'SCREEN')) return;
 
             if (gameMode === 'SOLO') {
                 players[0].keys['ArrowLeft'] = window.keys['ArrowLeft'] || window.keys['KeyA'];
@@ -367,6 +442,17 @@
                 if (ball.y > GROUND_Y - 160) {
                     if (ball.x < 80) { players[1].score++; resetGame(); }
                     if (ball.x > W-80) { players[0].score++; resetGame(); }
+                }
+
+                if(gameMode === 'ONLINE' && Date.now() - (window.lastOnlineSync || 0) > 60){
+                    window.lastOnlineSync = Date.now();
+                    const roomRef = getRoomDoc(roomId);
+                    updateDoc(roomRef, {
+                        ball: {x: ball.x, y: ball.y},
+                        p1: {x: players[0].x, y: players[0].y},
+                        p2: {x: players[1].x, y: players[1].y},
+                        scores: {p1: players[0].score, p2: players[1].score}
+                    }).catch(()=>{});
                 }
             }
 
