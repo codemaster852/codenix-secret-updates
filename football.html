@@ -7,222 +7,277 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --sky-blue: #1a2a6c;
-            --grass-green: #2ecc71;
-            --player-color: #e74c3c;
-            --ai-color: #f1c40f;
-            --ui-bg: rgba(0, 0, 0, 0.95);
+            --p1: #e74c3c;
+            --p2: #f1c40f;
+            --bg: #0a0a0a;
         }
 
         body {
-            margin: 0; padding: 0;
-            background-color: #050505;
-            color: white;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            height: 100vh; overflow: hidden;
+            margin: 0;
+            background: #000;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
             touch-action: none;
         }
 
         #game-container {
             position: relative;
-            box-shadow: 0 0 100px rgba(0, 0, 0, 1);
-            border: 6px solid #333;
-            background: #111;
-            border-radius: 12px;
-            overflow: hidden;
-            max-width: 95vw;
+            border: 4px solid #333;
+            max-width: 100vw;
         }
 
-        canvas { display: block; background: linear-gradient(to bottom, #1e3c72, #2a5298); }
+        canvas {
+            display: block;
+            background: linear-gradient(to bottom, #1e3c72, #2a5298);
+        }
 
         #ui-overlay {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            background: var(--ui-bg);
-            z-index: 100; text-align: center;
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            text-align: center;
         }
 
         .menu-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            display: flex;
             gap: 20px;
-            width: 80%;
-            margin-top: 30px;
+            margin-top: 20px;
         }
 
         .menu-btn {
             background: #222;
             border: 2px solid #444;
-            color: white;
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: 0.2s;
+            width: 200px;
+        }
+
+        .menu-btn:hover {
+            border-color: #ffcc00;
+            transform: translateY(-2px);
+        }
+
+        .score-board {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .team-box {
+            padding: 10px 30px;
+            min-width: 100px;
+            text-align: center;
             font-weight: bold;
+            border: 2px solid #fff;
         }
 
-        .menu-btn:hover { background: #333; border-color: #ffcc00; transform: scale(1.05); }
-        .menu-btn h3 { margin: 0 0 10px 0; color: #ffcc00; }
+        .timer-box {
+            background: #000;
+            padding: 10px 20px;
+            font-size: 2rem;
+            border: 2px solid #fff;
+            min-width: 60px;
+            text-align: center;
+            color: #0f0;
+        }
 
-        /* Modern Mobile Controller */
+        /* Mobile Controller Styles */
         #mobile-join-view {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            width: 100vw; height: 100vh; background: #111; padding: 20px; box-sizing: border-box;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            background: #111;
         }
-        #mobile-join-view input {
-            padding: 15px; font-size: 2rem; width: 80%; text-align: center;
-            background: #222; border: 2px solid #444; color: #ffcc00; border-radius: 10px; margin-bottom: 20px;
+
+        #mobile-code-input {
+            padding: 15px;
+            font-size: 2.5rem;
+            width: 250px;
+            text-align: center;
+            background: #222;
+            border: 2px solid #444;
+            color: #ffcc00;
+            border-radius: 15px;
             text-transform: uppercase;
         }
-        #mobile-join-view .join-btns { display: flex; gap: 15px; width: 90%; }
-        #mobile-join-view .join-btns button { 
-            flex: 1; padding: 20px; font-size: 1.2rem;
-            color: white; border: none; border-radius: 12px; font-weight: bold; 
-            box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+
+        .join-btns {
+            display: flex;
+            gap: 15px;
+        }
+
+        .join-btns button {
+            padding: 20px 30px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            color: white;
+            cursor: pointer;
         }
 
         #mobile-controller {
             display: none;
-            width: 100vw; height: 100vh;
-            background: #0a0a0a;
-            user-select: none;
-            position: fixed; top: 0; left: 0;
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: #050505;
         }
 
-        .ctrl-area { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: space-between; padding: 0 30px; box-sizing: border-box; }
-        .dpad-container { display: grid; grid-template-columns: repeat(3, 85px); grid-template-rows: repeat(2, 85px); gap: 12px; }
-        .action-container { display: flex; gap: 20px; align-items: flex-end; }
+        .ctrl-area {
+            position: absolute;
+            bottom: 50px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 40px;
+            box-sizing: border-box;
+        }
+
+        .dpad {
+            display: grid;
+            grid-template-columns: repeat(3, 90px);
+            gap: 15px;
+        }
 
         .ctrl-btn {
-            width: 85px; height: 85px; background: #222; border: 4px solid #444; border-radius: 20px;
-            display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff;
-            transition: transform 0.1s;
+            width: 90px;
+            height: 90px;
+            background: #222;
+            border: 4px solid #444;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            user-select: none;
         }
-        .ctrl-btn.active { background: #ffcc00 !important; color: #000 !important; transform: scale(1.1); border-color: #fff; }
-        .ctrl-btn.round { border-radius: 50%; width: 110px; height: 110px; font-size: 1.4rem; }
 
-        .score-board {
-            position: absolute; top: 20px; width: 100%;
-            display: flex; justify-content: center; z-index: 10;
+        .ctrl-btn.active {
+            background: #ffcc00 !important;
+            color: #000 !important;
+            transform: scale(0.95);
         }
-        .team-box { padding: 10px 30px; min-width: 120px; text-align: center; border: 2px solid white; }
-        .timer-box { background: #000; padding: 10px 25px; font-size: 2.5rem; color: #0f0; border: 2px solid white; }
+
+        .btn-kick {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #e74c3c;
+            border: 5px solid #fff;
+            box-shadow: 0 10px 0 #922b21;
+        }
 
         .hidden { display: none !important; }
-        #room-display { position: absolute; bottom: 10px; right: 10px; font-family: monospace; color: #ffcc00; }
-        #waiting-status { margin-top: 15px; font-weight: bold; color: #0f0; font-size: 1.2rem; }
-        
-        #error-msg { color: #ff4757; margin-top: 10px; font-weight: bold; min-height: 1.5em; }
+        #error-msg { color: #ff4757; font-weight: bold; min-height: 1.5em; }
     </style>
 </head>
 <body>
 
     <div id="game-container">
         <div class="score-board">
-            <div class="team-box" id="p1-ui" style="background: var(--player-color); border-radius: 10px 0 0 10px;">
-                <div style="font-size: 0.8rem;">PLAYER 1</div>
+            <div class="team-box" style="background: var(--p1); border-radius: 10px 0 0 10px;">
+                <div style="font-size: 0.7rem;">PLAYER 1</div>
                 <div id="p-score">0</div>
             </div>
-            <div class="timer-box" id="timer">60</div>
-            <div class="team-box" id="p2-ui" style="background: var(--ai-color); color: black; border-radius: 0 10px 10px 0;">
-                <div id="p2-label" style="font-size: 0.8rem;">PRO CPU</div>
+            <div id="timer" class="timer-box">60</div>
+            <div class="team-box" style="background: var(--p2); color: #000; border-radius: 0 10px 10px 0;">
+                <div id="p2-label" style="font-size: 0.7rem;">PRO CPU</div>
                 <div id="c-score">0</div>
             </div>
         </div>
 
         <canvas id="gameCanvas"></canvas>
-        <div id="room-display" class="hidden">ROOM: <span id="room-code-txt">---</span></div>
 
         <div id="ui-overlay">
-            <h1 style="font-size: 3.5rem; margin-bottom: 0; letter-spacing: 4px; text-shadow: 2px 2px 0 #000;">PRO SOCCER XL</h1>
-            <p id="menu-status" style="color: #ffcc00; font-weight: bold;">ARE YOU READY?</p>
+            <h1 style="font-size: 3.5rem; margin: 0; letter-spacing: 3px;">PRO SOCCER XL</h1>
+            <p id="menu-status" style="color: #ffcc00; font-weight: bold;">READY FOR KICKOFF?</p>
             
-            <div class="menu-grid" id="main-menu">
+            <div id="main-menu" class="menu-grid">
                 <div class="menu-btn" onclick="setMode('CPU')">
-                    <h3>VS COMPUTER</h3>
-                    <p>Single Player Mode</p>
+                    <h3>VS CPU</h3>
+                    <p>Single Player</p>
                 </div>
-                <div class="menu-btn" onclick="setMode('SCREEN')">
-                    <h3>MULTI-DEVICE</h3>
-                    <p>Connect 2 Phones as Gamepads</p>
+                <div class="menu-btn" onclick="setMode('online')">
+                    <h3>MULTIPLAYER</h3>
+                    <p>Mobile Controllers</p>
                 </div>
             </div>
 
             <div id="lobby-ui" class="hidden">
-                <p>ROOM CODE:</p>
-                <h2 id="lobby-code" style="font-size: 5.5rem; color: #ffcc00; margin: 5px; text-shadow: 0 0 20px rgba(255,204,0,0.4);">----</h2>
-                <p>Enter this on both mobiles to start</p>
-                <div id="waiting-status">PREPARING ROOM...</div>
-                <button class="menu-btn" style="margin-top: 30px; padding: 10px 40px;" onclick="location.reload()">BACK TO MENU</button>
+                <p>JOINING CODE:</p>
+                <h2 id="lobby-code" style="font-size: 6rem; color: #ffcc00; margin: 10px;">----</h2>
+                <div id="waiting-status" style="color: #0f0;">SETTING UP ROOM...</div>
+                <button class="menu-btn" style="margin-top: 20px;" onclick="location.reload()">BACK TO MENU</button>
             </div>
         </div>
     </div>
 
-    <!-- Mobile Join UI -->
+    <!-- Mobile UI -->
     <div id="mobile-join-view" class="hidden">
-        <h1 style="color: #ffcc00; margin-bottom: 5px;">PRO SOCCER XL</h1>
-        <p style="margin-bottom: 30px; opacity: 0.7;">GAMEPAD MODE</p>
+        <h1 style="color: #ffcc00;">SOCCER XL</h1>
+        <p>ENTER ROOM CODE</p>
         <input type="text" id="mobile-code-input" placeholder="CODE" maxlength="5">
         <div id="error-msg"></div>
         <div class="join-btns">
-            <button id="join-p1-btn" onclick="joinAs('p1')" style="background: #e74c3c;">JOIN AS P1</button>
-            <button id="join-p2-btn" onclick="joinAs('p2')" style="background: #f1c40f; color: black;">JOIN AS P2</button>
+            <button onclick="joinAs('p1')" style="background: #e74c3c;">JOIN P1</button>
+            <button onclick="joinAs('p2')" style="background: #f1c40f; color: #000;">JOIN P2</button>
         </div>
     </div>
 
-    <!-- Enhanced Mobile Controller -->
     <div id="mobile-controller">
         <div style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-            <div style="color: #444; font-weight: bold;">ROOM: <span id="ctrl-room-id" style="color: #ffcc00;">---</span></div>
-            <div id="player-indicator" style="padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.8rem;">-</div>
+            <div style="color: #444; font-weight: bold;">ROOM: <span id="ctrl-room-id" style="color: #ffcc00;">-</span></div>
+            <div id="player-indicator" style="padding: 8px 20px; border-radius: 10px; font-weight: bold;">-</div>
         </div>
         <div class="ctrl-area">
-            <div class="dpad-container">
+            <div class="dpad">
+                <div id="btn-left" class="ctrl-btn" style="grid-column: 1;">LEFT</div>
                 <div id="btn-up" class="ctrl-btn" style="grid-column: 2;">JUMP</div>
-                <div id="btn-left" class="ctrl-btn" style="grid-row: 2; grid-column: 1;">LEFT</div>
-                <div id="btn-right" class="ctrl-btn" style="grid-row: 2; grid-column: 3;">RIGHT</div>
+                <div id="btn-right" class="ctrl-btn" style="grid-column: 3;">RIGHT</div>
             </div>
-            <div class="action-container">
-                <div id="btn-kick" class="ctrl-btn round" style="background: #e74c3c; box-shadow: 0 8px 0 #922b21;">KICK</div>
-            </div>
+            <div id="btn-kick" class="ctrl-btn btn-kick">KICK</div>
         </div>
     </div>
 
     <script>
+        // Supabase configuration
         const SB_URL = "https://pqfydiligbnxpophipti.supabase.co";
         const SB_KEY = "sb_publishable_LE6Y0ujYmKgP8O69zu-gjA_q7GAN5wG";
         
-        let supabaseClient;
-        try { supabaseClient = window.supabase.createClient(SB_URL, SB_KEY); } catch (e) { console.error("Database connection failed"); }
+        // Use sbClient to avoid conflict with the globally defined 'supabase' identifier
+        const sbClient = window.supabase.createClient(SB_URL, SB_KEY);
 
-        const AudioEngine = {
-            ctx: null,
-            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
-            play(freq, type, dur, endFreq) {
-                this.init(); const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
-                o.type = type; o.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                if (endFreq) o.frequency.exponentialRampToValueAtTime(endFreq, this.ctx.currentTime + dur);
-                g.gain.setValueAtTime(0.2, this.ctx.currentTime);
-                g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + dur);
-                o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime + dur);
-            },
-            kick() { this.play(150, 'sine', 0.1, 40); },
-            jump() { this.play(200, 'sine', 0.1, 400); },
-            goal() { this.play(100, 'square', 0.6, 300); }
-        };
-
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const W = 1200, H = 600, GROUND_Y = H - 80;
         canvas.width = W; canvas.height = H;
 
-        let mode = 'CPU', role = 'HOST', roomCode = null, gameState = 'MENU';
-        let timeLeft = 60, scores = { p: 0, c: 0 };
+        let gameMode = 'CPU'; 
+        let gameState = 'MENU';
+        let roomCode = null;
+        let timeLeft = 60;
+        let scores = { p1: 0, p2: 0 };
+        let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
         let inputs = {
             p1: { left: false, right: false, up: false, kick: false },
             p2: { left: false, right: false, up: false, kick: false }
@@ -235,138 +290,170 @@
         if (isMobile) {
             document.getElementById('game-container').classList.add('hidden');
             document.getElementById('mobile-join-view').classList.remove('hidden');
-            role = 'CONTROLLER';
         }
 
-        async function syncRoom() {
-            if (!roomCode || role === 'CONTROLLER' || gameState === 'OVER') return;
-            try {
-                const { data, error } = await supabaseClient.from('rooms').select('state').eq('code', roomCode).single();
-                if (data && data.state) {
-                    inputs = data.state.inputs || inputs;
-                    const p1J = data.state.p1Active, p2J = data.state.p2Active;
-                    document.getElementById('waiting-status').textContent = `P1: ${p1J?'READY':'WAITING'} | P2: ${p2J?'READY':'WAITING'}`;
-                    if (p1J && p2J && gameState === 'MENU') startGame();
+        // Multiplayer logic
+        async function setMode(m) {
+            gameMode = m;
+            if (m === 'CPU') {
+                startGame();
+            } else {
+                document.getElementById('main-menu').classList.add('hidden');
+                document.getElementById('lobby-ui').classList.remove('hidden');
+                
+                roomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+                document.getElementById('lobby-code').textContent = roomCode;
+
+                // Create room using your schema
+                const { error } = await sbClient.from('rooms').insert([{
+                    code: roomCode,
+                    mode: 'online',
+                    status: 'waiting',
+                    state: { 
+                        inputs, 
+                        p1Active: false, 
+                        p2Active: false,
+                        scores: { p1: 0, p2: 0 } 
+                    }
+                }]);
+
+                if (error) {
+                    console.error(error);
+                    alert("Failed to create room.");
+                    return;
                 }
-            } catch (e) {}
-            setTimeout(syncRoom, 100);
+
+                // Listen for players joining
+                sbClient.channel('room_updates')
+                    .on('postgres_changes', { 
+                        event: 'UPDATE', 
+                        schema: 'public', 
+                        table: 'rooms', 
+                        filter: `code=eq.${roomCode}` 
+                    }, payload => {
+                        const data = payload.new.state;
+                        inputs = data.inputs;
+                        document.getElementById('waiting-status').innerHTML = 
+                            `P1: ${data.p1Active ? 'READY' : '...'} | P2: ${data.p2Active ? 'READY' : '...'}`;
+                        
+                        if (data.p1Active && data.p2Active && gameState === 'MENU') {
+                            startGame();
+                        }
+                    })
+                    .subscribe();
+            }
         }
 
         async function joinAs(pKey) {
+            const codeInput = document.getElementById('mobile-code-input').value.trim().toUpperCase();
             const err = document.getElementById('error-msg');
-            const codeInput = document.getElementById('mobile-code-input').value.toUpperCase().trim();
-            if (codeInput.length < 3) { err.textContent = "Enter code first!"; return; }
-            
+            if (codeInput.length < 3) { err.textContent = "Enter code!"; return; }
+
             err.textContent = "Connecting...";
-            roomCode = codeInput;
             
-            const { data, error } = await supabaseClient.from('rooms').select('state').eq('code', roomCode).single();
+            // Fetch current room state
+            const { data, error } = await sbClient.from('rooms')
+                .select('*')
+                .eq('code', codeInput)
+                .single();
+
             if (error || !data) { err.textContent = "Room not found!"; return; }
 
-            let ns = data.state || {}; 
-            if (ns[`${pKey}Active`]) { err.textContent = "Player already joined!"; return; }
+            let newState = data.state;
+            if (newState[pKey + 'Active']) { err.textContent = "Slot taken!"; return; }
+
+            newState[pKey + 'Active'] = true;
             
-            ns[`${pKey}Active`] = true;
-            const { error: upError } = await supabaseClient.from('rooms').update({ state: ns }).eq('code', roomCode);
+            const { error: upError } = await sbClient.from('rooms')
+                .update({ state: newState, status: (newState.p1Active && newState.p2Active) ? 'playing' : 'waiting' })
+                .eq('code', codeInput);
+
+            if (upError) { err.textContent = "Error joining!"; return; }
+
+            roomCode = codeInput;
+            document.getElementById('mobile-join-view').classList.add('hidden');
+            document.getElementById('mobile-controller').style.display = 'block';
+            document.getElementById('ctrl-room-id').textContent = roomCode;
             
-            if (!upError) {
-                document.getElementById('mobile-join-view').classList.add('hidden');
-                document.getElementById('mobile-controller').style.display = 'block';
-                document.getElementById('ctrl-room-id').textContent = roomCode;
-                const ind = document.getElementById('player-indicator');
-                ind.textContent = pKey.toUpperCase();
-                ind.style.backgroundColor = pKey === 'p1' ? '#e74c3c' : '#f1c40f';
-                ind.style.color = pKey === 'p1' ? 'white' : 'black';
-                setupController(pKey);
-            } else {
-                err.textContent = "Failed to join!";
-            }
+            const ind = document.getElementById('player-indicator');
+            ind.textContent = pKey.toUpperCase();
+            ind.style.background = pKey === 'p1' ? '#e74c3c' : '#f1c40f';
+            ind.style.color = pKey === 'p1' ? '#fff' : '#000';
+
+            setupController(pKey);
         }
 
         function setupController(pKey) {
             const updateState = async () => {
-                const { data } = await supabaseClient.from('rooms').select('state').eq('code', roomCode).single();
+                // Get fresh state to avoid overwriting other player's input
+                const { data } = await sbClient.from('rooms').select('state').eq('code', roomCode).single();
                 if (!data) return;
-                let ns = data.state || {}; ns.inputs = inputs;
-                await supabaseClient.from('rooms').update({ state: ns }).eq('code', roomCode);
+                
+                let s = data.state;
+                s.inputs[pKey] = inputs[pKey];
+                
+                await sbClient.from('rooms').update({ state: s }).eq('code', roomCode);
             };
 
             const bind = (id, key) => {
                 const el = document.getElementById(id);
-                const handle = (val) => (e) => { 
-                    e.preventDefault(); 
+                const handle = (val) => async (e) => {
+                    e.preventDefault();
                     if (inputs[pKey][key] === val) return;
-                    inputs[pKey][key] = val; 
-                    if(val) el.classList.add('active'); else el.classList.remove('active');
-                    updateState(); 
+                    inputs[pKey][key] = val;
+                    val ? el.classList.add('active') : el.classList.remove('active');
+                    await updateState();
                 };
                 el.addEventListener('touchstart', handle(true));
                 el.addEventListener('touchend', handle(false));
             };
-            bind('btn-up', 'up'); bind('btn-left', 'left'); bind('btn-right', 'right'); bind('btn-kick', 'kick');
+
+            bind('btn-left', 'left');
+            bind('btn-right', 'right');
+            bind('btn-up', 'up');
+            bind('btn-kick', 'kick');
         }
 
-        async function setMode(m) {
-            mode = m;
-            if (m === 'CPU') startGame();
-            else {
-                document.getElementById('main-menu').classList.add('hidden');
-                document.getElementById('lobby-ui').classList.remove('hidden');
-                roomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
-                document.getElementById('lobby-code').textContent = roomCode;
-                
-                // Create room first
-                const { error } = await supabaseClient.from('rooms').insert([{ 
-                    code: roomCode, 
-                    state: { inputs, p1Active: false, p2Active: false } 
-                }]);
-                
-                if (error) {
-                    alert("Database error! Please try again.");
-                    location.reload();
-                } else {
-                    document.getElementById('room-display').classList.remove('hidden');
-                    document.getElementById('room-code-txt').textContent = roomCode;
-                    syncRoom();
-                }
-            }
-        }
-
+        // Game Logic
         function startGame() {
-            if (gameState === 'PLAY') return;
             gameState = 'PLAY';
             document.getElementById('ui-overlay').classList.add('hidden');
-            document.getElementById('p2-label').textContent = mode === 'SCREEN' ? "PLAYER 2" : "PRO CPU";
-            const timer = setInterval(() => { 
-                if(gameState === 'PLAY') { 
-                    timeLeft--; 
-                    if(timeLeft <= 0) {
-                        gameState = 'OVER'; 
+            document.getElementById('p2-label').textContent = gameMode === 'online' ? 'PLAYER 2' : 'PRO CPU';
+            
+            const timer = setInterval(() => {
+                if (gameState === 'PLAY') {
+                    timeLeft--;
+                    document.getElementById('timer').textContent = timeLeft;
+                    if (timeLeft <= 0) {
+                        gameState = 'OVER';
                         clearInterval(timer);
-                        showGameOver();
+                        endGame();
                     }
-                    updateUI(); 
-                } 
+                }
             }, 1000);
+
             requestAnimationFrame(tick);
         }
 
-        function showGameOver() {
+        function endGame() {
             document.getElementById('ui-overlay').classList.remove('hidden');
             document.getElementById('main-menu').classList.remove('hidden');
             document.getElementById('lobby-ui').classList.add('hidden');
-            const winner = scores.p > scores.c ? "PLAYER 1 WINS!" : (scores.c > scores.p ? (mode==='CPU'?"CPU WINS!":"PLAYER 2 WINS!") : "DRAW!");
-            document.getElementById('menu-status').textContent = `GAME OVER - ${winner}`;
+            const win = scores.p1 > scores.p2 ? "PLAYER 1 WINS!" : (scores.p2 > scores.p1 ? "PLAYER 2 WINS!" : "DRAW!");
+            document.getElementById('menu-status').textContent = `GAME OVER - ${win}`;
         }
 
         function handlePhysics() {
             moveChar(p1, inputs.p1);
-            if (mode === 'CPU') {
+            
+            if (gameMode === 'CPU') {
                 const target = ball.x - p2.x;
-                inputs.p2.left = target < -30; inputs.p2.right = target > 30;
-                inputs.p2.up = ball.y < p2.y - 80 && Math.abs(target) < 100;
+                inputs.p2.left = target < -30;
+                inputs.p2.right = target > 30;
+                inputs.p2.up = ball.y < p2.y - 100 && Math.abs(target) < 120;
                 inputs.p2.kick = Math.abs(target) < 60;
             }
+            
             moveChar(p2, inputs.p2);
             updateBall();
             collide(p1); collide(p2);
@@ -376,7 +463,8 @@
             if (inp.left) { p.vx = -8; p.tilt = -0.15; }
             else if (inp.right) { p.vx = 8; p.tilt = 0.15; }
             else { p.vx *= 0.85; p.tilt *= 0.8; }
-            if (inp.up && p.y >= GROUND_Y) { p.vy = -16; AudioEngine.jump(); }
+            if (inp.up && p.y >= GROUND_Y) { p.vy = -16; }
+            
             p.vy += 0.7; p.x += p.vx; p.y += p.vy;
             if (p.y > GROUND_Y) { p.y = GROUND_Y; p.vy = 0; }
             p.x = Math.max(50, Math.min(W - 50, p.x));
@@ -384,12 +472,20 @@
 
         function updateBall() {
             ball.vy += 0.45; ball.x += ball.vx; ball.y += ball.vy; ball.rot += ball.vx * 0.05;
-            if (ball.y > GROUND_Y - ball.r) { ball.y = GROUND_Y - ball.r; ball.vy *= -0.6; ball.vx *= 0.98; }
-            if (ball.x < ball.r || ball.x > W - ball.r) { ball.vx *= -0.7; ball.x = ball.x < ball.r ? ball.r : W-ball.r; }
+            
+            if (ball.y > GROUND_Y - ball.r) { 
+                ball.y = GROUND_Y - ball.r; ball.vy *= -0.6; ball.vx *= 0.98; 
+            }
+            if (ball.x < ball.r || ball.x > W - ball.r) { 
+                ball.vx *= -0.7; ball.x = ball.x < ball.r ? ball.r : W - ball.r; 
+            }
+            
+            // Goal logic
             if (ball.y > GROUND_Y - 160) {
-                if (ball.x < 80) { scores.c++; resetBall(); AudioEngine.goal(); }
-                if (ball.x > W - 80) { scores.p++; resetBall(); AudioEngine.goal(); }
-                updateUI();
+                if (ball.x < 80) { scores.p2++; resetBall(); }
+                if (ball.x > W - 80) { scores.p1++; resetBall(); }
+                document.getElementById('p-score').textContent = scores.p1;
+                document.getElementById('c-score').textContent = scores.p2;
             }
         }
 
@@ -403,61 +499,47 @@
                 const force = 14 + (p.vx !== 0 ? 3 : 0);
                 ball.vx = Math.cos(ang) * force + p.vx * 0.4;
                 ball.vy = Math.sin(ang) * force;
-                AudioEngine.kick();
-                // Avoid sticking
-                ball.x += Math.cos(ang) * 5;
-                ball.y += Math.sin(ang) * 5;
+                ball.x += Math.cos(ang) * 5; ball.y += Math.sin(ang) * 5;
             }
         }
 
-        function updateUI() {
-            document.getElementById('p-score').textContent = scores.p;
-            document.getElementById('c-score').textContent = scores.c;
-            document.getElementById('timer').textContent = timeLeft;
-        }
-
-        function draw() {
-            ctx.clearRect(0, 0, W, H);
-            // Grass
-            ctx.fillStyle = '#2ecc71'; ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
-            ctx.fillStyle = '#27ae60'; for(let i=0; i<W; i+=100) ctx.fillRect(i, GROUND_Y, 50, H-GROUND_Y);
-            // Goals
-            ctx.strokeStyle = '#fff'; ctx.lineWidth = 6;
-            ctx.strokeRect(0, GROUND_Y - 160, 80, 160); ctx.strokeRect(W - 80, GROUND_Y - 160, 80, 160);
-            
-            drawPlayer(p1); drawPlayer(p2);
-            
-            // Ball
-            ctx.save(); ctx.translate(ball.x, ball.y); ctx.rotate(ball.rot);
-            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, ball.r, 0, Math.PI*2); ctx.fill();
-            ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
-            ctx.fillStyle = '#000'; for(let i=0; i<5; i++) { ctx.rotate(Math.PI*2/5); ctx.fillRect(ball.r-8, -2, 6, 4); }
-            ctx.restore();
+        function tick() {
+            if (gameState === 'PLAY') {
+                handlePhysics();
+                ctx.clearRect(0, 0, W, H);
+                // Pitch
+                ctx.fillStyle = '#2ecc71'; ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 4;
+                ctx.strokeRect(0, GROUND_Y - 160, 80, 160); ctx.strokeRect(W - 80, GROUND_Y - 160, 80, 160);
+                
+                drawPlayer(p1); drawPlayer(p2);
+                
+                // Ball
+                ctx.save(); ctx.translate(ball.x, ball.y); ctx.rotate(ball.rot);
+                ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, ball.r, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
+                ctx.restore();
+            }
+            requestAnimationFrame(tick);
         }
 
         function drawPlayer(p) {
             ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.tilt);
             ctx.fillStyle = p.color; ctx.beginPath(); ctx.roundRect(-25, -50, 50, 45, 10); ctx.fill();
             ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(0, -75, 40, 0, Math.PI*2); ctx.fill();
-            // Eyes
-            ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(-15, -80, 4, 0, Math.PI*2); ctx.arc(15, -80, 4, 0, Math.PI*2); ctx.fill();
             ctx.restore();
         }
 
-        function tick() {
-            if (gameState === 'PLAY') { handlePhysics(); draw(); }
-            requestAnimationFrame(tick);
-        }
-
+        // Keyboard support for testing
         window.onkeydown = (e) => {
-            if (e.code === 'ArrowLeft' || e.code === 'KeyA') inputs.p1.left = true;
-            if (e.code === 'ArrowRight' || e.code === 'KeyD') inputs.p1.right = true;
-            if (e.code === 'ArrowUp' || e.code === 'KeyW') inputs.p1.up = true;
+            if (e.code === 'ArrowLeft') inputs.p1.left = true;
+            if (e.code === 'ArrowRight') inputs.p1.right = true;
+            if (e.code === 'ArrowUp') inputs.p1.up = true;
         };
         window.onkeyup = (e) => {
-            if (e.code === 'ArrowLeft' || e.code === 'KeyA') inputs.p1.left = false;
-            if (e.code === 'ArrowRight' || e.code === 'KeyD') inputs.p1.right = false;
-            if (e.code === 'ArrowUp' || e.code === 'KeyW') inputs.p1.up = false;
+            if (e.code === 'ArrowLeft') inputs.p1.left = false;
+            if (e.code === 'ArrowRight') inputs.p1.right = false;
+            if (e.code === 'ArrowUp') inputs.p1.up = false;
         };
     </script>
 </body>
