@@ -390,7 +390,6 @@
 
         function setupController(pKey) {
             const updateRemoteInput = async () => {
-                // Fetch latest state to avoid race condition overwrites
                 const { data } = await sbClient.from('rooms').select('state').eq('code', roomCode).single();
                 if (!data) return;
                 
@@ -409,9 +408,8 @@
 
             const bindBtn = (id, key) => {
                 const el = document.getElementById(id);
-                // We use touchstart for immediate response
                 el.addEventListener('touchstart', (e) => {
-                    e.preventDefault(); // Stop scrolling/zooming
+                    e.preventDefault();
                     handleInput(key, true, el);
                 }, { passive: false });
 
@@ -420,7 +418,6 @@
                     handleInput(key, false, el);
                 }, { passive: false });
 
-                // Mouse support for testing
                 el.addEventListener('mousedown', (e) => handleInput(key, true, el));
                 el.addEventListener('mouseup', (e) => handleInput(key, false, el));
             };
@@ -430,25 +427,34 @@
             bindBtn('btn-up', 'up');
             bindBtn('btn-kick', 'kick');
 
-            // Safety check: if touch ends anywhere else, clear inputs
             window.addEventListener('touchend', () => {
                 const keys = ['left', 'right', 'up', 'kick'];
+                let changed = false;
                 keys.forEach(k => {
                     if (inputs[pKey][k]) {
                         inputs[pKey][k] = false;
+                        changed = true;
                         document.querySelector('.ctrl-btn.active')?.classList.remove('active');
                     }
                 });
-                updateRemoteInput();
+                if (changed) updateRemoteInput();
             });
         }
 
         // Game Core
         function startGame() {
             gameState = 'PLAY';
+            scores.p1 = 0;
+            scores.p2 = 0;
+            timeLeft = 60;
+            document.getElementById('p-score').textContent = "0";
+            document.getElementById('c-score').textContent = "0";
+            document.getElementById('timer').textContent = "60";
             document.getElementById('ui-overlay').classList.add('hidden');
             document.getElementById('p2-label').textContent = gameMode === 'online' ? 'PLAYER 2' : 'PRO CPU';
             
+            resetField();
+
             const timer = setInterval(() => {
                 if (gameState === 'PLAY') {
                     timeLeft--;
@@ -510,14 +516,39 @@
             }
             
             if (ball.y > GROUND_Y - 160) {
-                if (ball.x < 80) { scores.p2++; resetBall(); }
-                if (ball.x > W - 80) { scores.p1++; resetBall(); }
+                if (ball.x < 80) { 
+                    scores.p2++; 
+                    resetField(); 
+                } else if (ball.x > W - 80) { 
+                    scores.p1++; 
+                    resetField(); 
+                }
                 document.getElementById('p-score').textContent = scores.p1;
                 document.getElementById('c-score').textContent = scores.p2;
             }
         }
 
-        function resetBall() { ball.x = W/2; ball.y = H/3; ball.vx = 0; ball.vy = 0; }
+        function resetField() {
+            // Reset Ball
+            ball.x = W/2; 
+            ball.y = H/3; 
+            ball.vx = 0; 
+            ball.vy = 0;
+            
+            // Reset Player 1
+            p1.x = 250;
+            p1.y = GROUND_Y;
+            p1.vx = 0;
+            p1.vy = 0;
+            p1.tilt = 0;
+            
+            // Reset Player 2
+            p2.x = W - 250;
+            p2.y = GROUND_Y;
+            p2.vx = 0;
+            p2.vy = 0;
+            p2.tilt = 0;
+        }
 
         function collide(p) {
             const dx = ball.x - p.x, dy = ball.y - (p.y - 60);
