@@ -35,7 +35,7 @@
             max-width: 95vw;
         }
 
-        canvas { display: block; background: linear-gradient(to bottom, #1a2a6c, #b21f1f, #fdbb2d); }
+        canvas { display: block; background: linear-gradient(to bottom, #1e3c72, #2a5298); }
 
         #ui-overlay {
             position: absolute; top: 0; left: 0;
@@ -66,9 +66,8 @@
 
         .menu-btn:hover { background: #333; border-color: #ffcc00; transform: scale(1.05); }
         .menu-btn h3 { margin: 0 0 10px 0; color: #ffcc00; }
-        .menu-btn p { margin: 0; font-size: 0.8rem; opacity: 0.7; }
 
-        /* Mobile View Styles */
+        /* Modern Mobile Controller */
         #mobile-join-view {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             width: 100vw; height: 100vh; background: #111; padding: 20px; box-sizing: border-box;
@@ -83,24 +82,22 @@
         #mobile-controller {
             display: none;
             width: 100vw; height: 100vh;
-            background: #000;
-            grid-template-areas: "dpad actions";
-            grid-template-columns: 1fr 1fr;
+            background: #0a0a0a;
             user-select: none;
+            position: fixed; top: 0; left: 0;
         }
 
-        .dpad { grid-area: dpad; display: grid; grid-template-columns: repeat(3, 1fr); align-items: center; justify-items: center; }
-        .actions { grid-area: actions; display: grid; grid-template-columns: repeat(2, 1fr); align-items: center; justify-items: center; }
+        .ctrl-area { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; box-sizing: border-box; }
+        .dpad-container { display: grid; grid-template-columns: repeat(3, 80px); grid-template-rows: repeat(2, 80px); gap: 10px; }
+        .action-container { display: flex; gap: 20px; align-items: flex-end; }
 
         .ctrl-btn {
-            width: 90px; height: 90px;
-            background: #222;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; border: 4px solid #444;
-            touch-action: none; color: #aaa;
+            width: 80px; height: 80px; background: #222; border: 4px solid #444; border-radius: 15px;
+            display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff;
+            transition: transform 0.1s;
         }
-        .ctrl-btn:active { background: #ffcc00; color: black; border-color: white; transform: scale(0.9); }
+        .ctrl-btn.active { background: #ffcc00 !important; color: #000 !important; transform: scale(1.1); border-color: #fff; }
+        .ctrl-btn.round { border-radius: 50%; width: 100px; height: 100px; font-size: 1.2rem; }
 
         .score-board {
             position: absolute; top: 20px; width: 100%;
@@ -111,13 +108,11 @@
 
         .hidden { display: none !important; }
         #room-display { position: absolute; bottom: 10px; right: 10px; font-family: monospace; color: #ffcc00; }
-        
-        #waiting-status { margin-top: 15px; font-weight: bold; color: #0f0; }
+        #waiting-status { margin-top: 15px; font-weight: bold; color: #0f0; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
-    <!-- PC/Screen Game View -->
     <div id="game-container">
         <div class="score-board">
             <div class="team-box" id="p1-ui" style="background: var(--player-color); border-radius: 10px 0 0 10px;">
@@ -135,53 +130,52 @@
         <div id="room-display" class="hidden">ROOM: <span id="room-code-txt">---</span></div>
 
         <div id="ui-overlay">
-            <h1 style="font-size: 3rem; margin-bottom: 0;">PRO SOCCER XL</h1>
-            <p id="menu-status" style="color: #ffcc00;">SELECT GAME MODE</p>
+            <h1 style="font-size: 3rem; margin-bottom: 0; letter-spacing: 4px;">PRO SOCCER XL</h1>
+            <p id="menu-status" style="color: #ffcc00; font-weight: bold;">CHOOSE MATCH TYPE</p>
             
             <div class="menu-grid" id="main-menu">
                 <div class="menu-btn" onclick="setMode('CPU')">
                     <h3>VS COMPUTER</h3>
-                    <p>Classic single player</p>
+                    <p>Standard AI match</p>
                 </div>
                 <div class="menu-btn" onclick="setMode('SCREEN')">
                     <h3>SCREEN MODE</h3>
-                    <p>Use 2 mobiles as controllers</p>
-                </div>
-                <div class="menu-btn" onclick="setMode('ONLINE')">
-                    <h3>ONLINE MATCH</h3>
-                    <p>Play against anyone</p>
+                    <p>Use mobiles as gamepads</p>
                 </div>
             </div>
 
             <div id="lobby-ui" class="hidden">
-                <h2 id="lobby-code" style="font-size: 4rem; color: #ffcc00; margin: 10px;">----</h2>
-                <p>Enter this code on your mobile devices</p>
-                <div id="waiting-status">WAITING FOR PLAYERS...</div>
-                <button class="menu-btn" style="margin-top: 20px;" onclick="location.reload()">CANCEL</button>
+                <h2 id="lobby-code" style="font-size: 5rem; color: #ffcc00; margin: 5px; text-shadow: 0 0 20px rgba(255,204,0,0.5);">----</h2>
+                <p>Waiting for controllers to join...</p>
+                <div id="waiting-status">CONNECTING...</div>
+                <button class="menu-btn" style="margin-top: 30px;" onclick="location.reload()">CANCEL</button>
             </div>
         </div>
     </div>
 
     <!-- Mobile Join UI -->
     <div id="mobile-join-view" class="hidden">
-        <h2 style="color: #ffcc00;">CONTROLLER JOIN</h2>
-        <input type="text" id="mobile-code-input" placeholder="ROOM CODE" maxlength="5">
+        <h1 style="color: #ffcc00; margin-bottom: 5px;">PRO SOCCER XL</h1>
+        <p style="margin-bottom: 30px; opacity: 0.7;">ENTER ROOM CODE</p>
+        <input type="text" id="mobile-code-input" placeholder="00000" maxlength="5">
         <div class="join-btns">
-            <button onclick="joinAs('p1')" style="background: #e74c3c;">JOIN P1</button>
-            <button onclick="joinAs('p2')" style="background: #f1c40f; color: black;">JOIN P2</button>
+            <button onclick="joinAs('p1')" style="background: #e74c3c;">AS P1</button>
+            <button onclick="joinAs('p2')" style="background: #f1c40f; color: black;">AS P2</button>
         </div>
-        <p style="opacity: 0.5; margin-top: 20px; font-size: 0.8rem;">This device will only act as a controller.</p>
     </div>
 
-    <!-- Mobile Controller View -->
+    <!-- Enhanced Mobile Controller -->
     <div id="mobile-controller">
-        <div class="dpad">
-            <div></div><div class="ctrl-btn" id="btn-up">UP</div><div></div>
-            <div class="ctrl-btn" id="btn-left">LEFT</div><div></div><div class="ctrl-btn" id="btn-right">RIGHT</div>
-        </div>
-        <div class="actions">
-            <div class="ctrl-btn" style="background: #e74c3c; color: white;" id="btn-kick">KICK</div>
-            <div class="ctrl-btn" style="background: #f1c40f; color: black;" id="btn-power">SHR</div>
+        <div style="padding: 20px; text-align: center; color: #444; font-weight: bold;">CONNECTED TO: <span id="ctrl-room-id">---</span></div>
+        <div class="ctrl-area">
+            <div class="dpad-container">
+                <div id="btn-up" class="ctrl-btn" style="grid-column: 2;">JUMP</div>
+                <div id="btn-left" class="ctrl-btn" style="grid-row: 2; grid-column: 1;">◀</div>
+                <div id="btn-right" class="ctrl-btn" style="grid-row: 2; grid-column: 3;">▶</div>
+            </div>
+            <div class="action-container">
+                <div id="btn-kick" class="ctrl-btn round" style="background: #e74c3c;">KICK</div>
+            </div>
         </div>
     </div>
 
@@ -190,9 +184,36 @@
         const SB_KEY = "sb_publishable_LE6Y0ujYmKgP8O69zu-gjA_q7GAN5wG";
         
         let supabaseClient;
-        try {
-            supabaseClient = window.supabase.createClient(SB_URL, SB_KEY);
-        } catch (e) { console.error("Supabase failed", e); }
+        try { supabaseClient = window.supabase.createClient(SB_URL, SB_KEY); } catch (e) {}
+
+        const AudioEngine = {
+            ctx: null,
+            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            playKick() {
+                this.init(); const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
+                o.type = 'sine'; o.frequency.setValueAtTime(150, this.ctx.currentTime);
+                o.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.1);
+                g.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
+                o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime + 0.1);
+            },
+            playJump() {
+                this.init(); const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
+                o.frequency.setValueAtTime(200, this.ctx.currentTime);
+                o.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.1);
+                g.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
+                o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime + 0.1);
+            },
+            playGoal() {
+                this.init(); const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
+                o.type = 'square'; o.frequency.setValueAtTime(100, this.ctx.currentTime);
+                o.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.5);
+                g.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.5);
+                o.connect(g); g.connect(this.ctx.destination); o.start(); o.stop(this.ctx.currentTime + 0.5);
+            }
+        };
 
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         const canvas = document.getElementById('gameCanvas');
@@ -200,24 +221,17 @@
         const W = 1200, H = 600, GROUND_Y = H - 80;
         canvas.width = W; canvas.height = H;
 
-        let mode = 'CPU'; 
-        let role = 'HOST'; 
-        let roomCode = null;
-        let gameState = 'MENU';
-        let timeLeft = 60;
-        let scores = { p: 0, c: 0 };
-        let p1Joined = false, p2Joined = false;
-        
+        let mode = 'CPU', role = 'HOST', roomCode = null, gameState = 'MENU';
+        let timeLeft = 60, scores = { p: 0, c: 0 };
         let inputs = {
-            p1: { left: false, right: false, up: false, kick: false, power: false },
-            p2: { left: false, right: false, up: false, kick: false, power: false }
+            p1: { left: false, right: false, up: false, kick: false },
+            p2: { left: false, right: false, up: false, kick: false }
         };
 
-        const ball = { x: W/2, y: H/2, r: 16, vx: 0, vy: 0 };
-        const p1 = { x: 250, y: GROUND_Y, vx: 0, vy: 0, r: 38, color: '#e74c3c' };
-        const p2 = { x: W-250, y: GROUND_Y, vx: 0, vy: 0, r: 38, color: '#f1c40f' };
+        const ball = { x: W/2, y: H/2, r: 18, vx: 0, vy: 0, rot: 0 };
+        const p1 = { x: 250, y: GROUND_Y, vx: 0, vy: 0, r: 40, color: '#e74c3c', tilt: 0 };
+        const p2 = { x: W-250, y: GROUND_Y, vx: 0, vy: 0, r: 40, color: '#f1c40f', tilt: 0 };
 
-        // UI Initialization
         if (isMobile) {
             document.getElementById('game-container').classList.add('hidden');
             document.getElementById('mobile-join-view').classList.remove('hidden');
@@ -227,84 +241,62 @@
         async function syncRoom() {
             if (!roomCode || role === 'CONTROLLER') return;
             try {
-                const { data } = await supabaseClient.from('rooms').select('*').eq('code', roomCode).single();
+                const { data } = await supabaseClient.from('rooms').select('state').eq('code', roomCode).single();
                 if (data && data.state) {
                     inputs = data.state.inputs || inputs;
-                    p1Joined = data.state.p1Active || false;
-                    p2Joined = data.state.p2Active || false;
-
-                    const statusTxt = document.getElementById('waiting-status');
-                    if (mode === 'SCREEN') {
-                        statusTxt.textContent = `P1: ${p1Joined ? 'READY' : '...'} | P2: ${p2Joined ? 'READY' : '...'}`;
-                        if (p1Joined && p2Joined && gameState === 'MENU') startGame();
-                    } else if (mode === 'ONLINE') {
-                        statusTxt.textContent = `P2: ${p2Joined ? 'READY' : 'WAITING...'}`;
-                        if (p2Joined && gameState === 'MENU') startGame();
-                    }
+                    const p1J = data.state.p1Active, p2J = data.state.p2Active;
+                    document.getElementById('waiting-status').textContent = `P1: ${p1J?'READY':'...'} | P2: ${p2J?'READY':'...'}`;
+                    if (p1J && p2J && gameState === 'MENU') startGame();
                 }
             } catch (e) {}
-            setTimeout(syncRoom, 150);
+            setTimeout(syncRoom, 100);
         }
 
-        async function joinAs(playerKey) {
-            const codeInput = document.getElementById('mobile-code-input').value.toUpperCase();
-            if (codeInput.length < 3) return;
-            roomCode = codeInput;
-
-            // Fetch current state
+        async function joinAs(pKey) {
+            const code = document.getElementById('mobile-code-input').value.toUpperCase();
+            if (code.length < 3) return;
+            roomCode = code;
             const { data } = await supabaseClient.from('rooms').select('state').eq('code', roomCode).single();
             if (!data) return;
-
-            let newState = data.state || {};
-            newState[`${playerKey}Active`] = true;
-
-            const { error } = await supabaseClient
-                .from('rooms')
-                .update({ state: newState })
-                .eq('code', roomCode);
-
+            let ns = data.state || {}; ns[`${pKey}Active`] = true;
+            const { error } = await supabaseClient.from('rooms').update({ state: ns }).eq('code', roomCode);
             if (!error) {
                 document.getElementById('mobile-join-view').classList.add('hidden');
-                document.getElementById('mobile-controller').style.display = 'grid';
-                setupController(playerKey);
+                document.getElementById('mobile-controller').style.display = 'block';
+                document.getElementById('ctrl-room-id').textContent = roomCode;
+                setupController(pKey);
             }
         }
 
-        function setupController(playerKey) {
-            const sendInput = async () => {
+        function setupController(pKey) {
+            const updateState = async () => {
                 const { data } = await supabaseClient.from('rooms').select('state').eq('code', roomCode).single();
-                let newState = data.state || {};
-                newState.inputs = inputs;
-                await supabaseClient.from('rooms').update({ state: newState }).eq('code', roomCode);
+                let ns = data.state || {}; ns.inputs = inputs;
+                await supabaseClient.from('rooms').update({ state: ns }).eq('code', roomCode);
             };
 
             const bind = (id, key) => {
                 const el = document.getElementById(id);
-                el.addEventListener('touchstart', (e) => { e.preventDefault(); inputs[playerKey][key] = true; sendInput(); });
-                el.addEventListener('touchend', (e) => { e.preventDefault(); inputs[playerKey][key] = false; sendInput(); });
+                const handle = (val) => (e) => { 
+                    e.preventDefault(); inputs[pKey][key] = val; 
+                    if(val) el.classList.add('active'); else el.classList.remove('active');
+                    updateState(); 
+                };
+                el.addEventListener('touchstart', handle(true));
+                el.addEventListener('touchend', handle(false));
             };
-
-            bind('btn-up', 'up'); bind('btn-left', 'left'); bind('btn-right', 'right');
-            bind('btn-kick', 'kick'); bind('btn-power', 'power');
+            bind('btn-up', 'up'); bind('btn-left', 'left'); bind('btn-right', 'right'); bind('btn-kick', 'kick');
         }
 
         async function setMode(m) {
             mode = m;
-            if (m === 'CPU') {
-                startGame();
-            } else {
+            if (m === 'CPU') startGame();
+            else {
                 roomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
                 document.getElementById('main-menu').classList.add('hidden');
                 document.getElementById('lobby-ui').classList.remove('hidden');
                 document.getElementById('lobby-code').textContent = roomCode;
-                document.getElementById('room-display').classList.remove('hidden');
-                document.getElementById('room-code-txt').textContent = roomCode;
-
-                await supabaseClient.from('rooms').insert([{ 
-                    code: roomCode, 
-                    mode: m, 
-                    state: { inputs, p1Active: m === 'ONLINE', p2Active: false } 
-                }]);
+                await supabaseClient.from('rooms').insert([{ code: roomCode, state: { inputs, p1Active: false, p2Active: false } }]);
                 syncRoom();
             }
         }
@@ -313,65 +305,56 @@
             if (gameState === 'PLAY') return;
             gameState = 'PLAY';
             document.getElementById('ui-overlay').classList.add('hidden');
-            if (mode !== 'CPU') {
-                document.getElementById('p2-label').textContent = mode === 'SCREEN' ? "PLAYER 2" : "ONLINE OPP";
-            }
-            setInterval(() => {
-                if(gameState === 'PLAY' && role === 'HOST') {
-                    timeLeft--;
-                    if(timeLeft <= 0) gameState = 'OVER';
-                    updateUI();
-                }
-            }, 1000);
+            document.getElementById('p2-label').textContent = mode === 'SCREEN' ? "PLAYER 2" : "PRO CPU";
+            setInterval(() => { if(gameState === 'PLAY') { timeLeft--; if(timeLeft <= 0) gameState = 'OVER'; updateUI(); } }, 1000);
             requestAnimationFrame(tick);
         }
 
         function handlePhysics() {
-            handleMovement(p1, inputs.p1);
+            moveChar(p1, inputs.p1);
             if (mode === 'CPU') {
-                const dist = ball.x - p2.x;
-                inputs.p2.left = dist < -40;
-                inputs.p2.right = dist > 40;
-                inputs.p2.up = ball.y < p2.y - 100 && Math.abs(dist) < 100;
+                const target = ball.x - p2.x;
+                inputs.p2.left = target < -30; inputs.p2.right = target > 30;
+                inputs.p2.up = ball.y < p2.y - 80 && Math.abs(target) < 100;
+                inputs.p2.kick = Math.abs(target) < 60;
             }
-            handleMovement(p2, inputs.p2);
+            moveChar(p2, inputs.p2);
             updateBall();
-            checkCollision(p1);
-            checkCollision(p2);
+            collide(p1); collide(p2);
         }
 
-        function handleMovement(p, inp) {
-            if (inp.left) p.vx = -7;
-            else if (inp.right) p.vx = 7;
-            else p.vx *= 0.8;
-            if (inp.up && p.y >= GROUND_Y) p.vy = -15;
-            p.vy += 0.6; p.x += p.vx; p.y += p.vy;
+        function moveChar(p, inp) {
+            if (inp.left) { p.vx = -8; p.tilt = -0.15; }
+            else if (inp.right) { p.vx = 8; p.tilt = 0.15; }
+            else { p.vx *= 0.8; p.tilt *= 0.8; }
+            if (inp.up && p.y >= GROUND_Y) { p.vy = -16; AudioEngine.playJump(); }
+            p.vy += 0.7; p.x += p.vx; p.y += p.vy;
             if (p.y > GROUND_Y) { p.y = GROUND_Y; p.vy = 0; }
-            p.x = Math.max(40, Math.min(W - 40, p.x));
+            p.x = Math.max(50, Math.min(W - 50, p.x));
         }
 
         function updateBall() {
-            ball.vy += 0.5; ball.x += ball.vx; ball.y += ball.vy;
-            if (ball.y > GROUND_Y - ball.r) { ball.y = GROUND_Y - ball.r; ball.vy *= -0.7; ball.vx *= 0.98; }
+            ball.vy += 0.45; ball.x += ball.vx; ball.y += ball.vy; ball.rot += ball.vx * 0.05;
+            if (ball.y > GROUND_Y - ball.r) { ball.y = GROUND_Y - ball.r; ball.vy *= -0.6; ball.vx *= 0.98; }
             if (ball.x < ball.r || ball.x > W - ball.r) { ball.vx *= -0.7; ball.x = ball.x < ball.r ? ball.r : W-ball.r; }
             if (ball.y > GROUND_Y - 160) {
-                if (ball.x < 80) score('c');
-                if (ball.x > W - 80) score('p');
+                if (ball.x < 80) { scores.c++; resetBall(); AudioEngine.playGoal(); }
+                if (ball.x > W - 80) { scores.p++; resetBall(); AudioEngine.playGoal(); }
+                updateUI();
             }
         }
 
-        function score(who) {
-            scores[who]++; ball.x = W/2; ball.y = H/3; ball.vx = 0; ball.vy = 0;
-            updateUI();
-        }
+        function resetBall() { ball.x = W/2; ball.y = H/3; ball.vx = 0; ball.vy = 0; }
 
-        function checkCollision(p) {
+        function collide(p) {
             const dx = ball.x - p.x, dy = ball.y - (p.y - 60);
             const dist = Math.sqrt(dx*dx + dy*dy);
             if (dist < ball.r + p.r) {
                 const ang = Math.atan2(dy, dx);
-                ball.vx = Math.cos(ang) * 15 + p.vx * 0.5;
-                ball.vy = Math.sin(ang) * 15;
+                const force = 14 + (p.vx !== 0 ? 3 : 0);
+                ball.vx = Math.cos(ang) * force + p.vx * 0.4;
+                ball.vy = Math.sin(ang) * force;
+                AudioEngine.playKick();
             }
         }
 
@@ -383,37 +366,46 @@
 
         function draw() {
             ctx.clearRect(0, 0, W, H);
-            ctx.fillStyle = '#27ae60'; ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
-            ctx.strokeStyle = '#fff'; ctx.lineWidth = 5;
-            ctx.strokeRect(0, GROUND_Y - 160, 80, 160);
-            ctx.strokeRect(W - 80, GROUND_Y - 160, 80, 160);
+            // Grass
+            ctx.fillStyle = '#2ecc71'; ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+            ctx.fillStyle = '#27ae60'; for(let i=0; i<W; i+=100) ctx.fillRect(i, GROUND_Y, 50, H-GROUND_Y);
+            // Goals
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 6;
+            ctx.strokeRect(0, GROUND_Y - 160, 80, 160); ctx.strokeRect(W - 80, GROUND_Y - 160, 80, 160);
+            
             drawPlayer(p1); drawPlayer(p2);
-            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2); ctx.fill();
+            
+            // Ball
+            ctx.save(); ctx.translate(ball.x, ball.y); ctx.rotate(ball.rot);
+            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, ball.r, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.fillStyle = '#000'; for(let i=0; i<5; i++) { ctx.rotate(Math.PI*2/5); ctx.fillRect(ball.r-8, -2, 6, 4); }
+            ctx.restore();
         }
 
         function drawPlayer(p) {
-            ctx.fillStyle = p.color; ctx.beginPath(); ctx.roundRect(p.x - 25, p.y - 50, 50, 45, 10); ctx.fill();
-            ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(p.x, p.y - 75, 40, 0, Math.PI*2); ctx.fill();
+            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.tilt);
+            ctx.fillStyle = p.color; ctx.beginPath(); ctx.roundRect(-25, -50, 50, 45, 10); ctx.fill();
+            ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(0, -75, 40, 0, Math.PI*2); ctx.fill();
+            // Eyes
+            ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(-15, -80, 4, 0, Math.PI*2); ctx.arc(15, -80, 4, 0, Math.PI*2); ctx.fill();
+            ctx.restore();
         }
 
         function tick() {
-            if (gameState === 'PLAY') {
-                if(role === 'HOST') handlePhysics();
-                draw();
-            }
+            if (gameState === 'PLAY') { handlePhysics(); draw(); }
             requestAnimationFrame(tick);
         }
 
         window.onkeydown = (e) => {
-            if (e.code === 'ArrowLeft') inputs.p1.left = true;
-            if (e.code === 'ArrowRight') inputs.p1.right = true;
-            if (e.code === 'ArrowUp') inputs.p1.up = true;
-            if (gameState === 'MENU' && mode === 'CPU') startGame();
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') inputs.p1.left = true;
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') inputs.p1.right = true;
+            if (e.code === 'ArrowUp' || e.code === 'KeyW') inputs.p1.up = true;
         };
         window.onkeyup = (e) => {
-            if (e.code === 'ArrowLeft') inputs.p1.left = false;
-            if (e.code === 'ArrowRight') inputs.p1.right = false;
-            if (e.code === 'ArrowUp') inputs.p1.up = false;
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') inputs.p1.left = false;
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') inputs.p1.right = false;
+            if (e.code === 'ArrowUp' || e.code === 'KeyW') inputs.p1.up = false;
         };
     </script>
 </body>
