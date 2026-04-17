@@ -187,7 +187,7 @@
         }
 
         .hidden { display: none !important; }
-        #error-msg { color: #ff4757; font-weight: bold; min-height: 1.5em; }
+        #error-msg { color: #ff4757; font-weight: bold; min-height: 1.5em; text-align: center; padding: 0 20px; }
     </style>
 </head>
 <body>
@@ -233,8 +233,8 @@
 
     <!-- Mobile UI -->
     <div id="mobile-join-view" class="hidden">
-        <h1 style="color: #ffcc00;">SOCCER XL</h1>
-        <p>ENTER ROOM CODE</p>
+        <h1 style="color: #ffcc00; margin-bottom: 0;">SOCCER XL</h1>
+        <p style="margin-top: 5px; opacity: 0.7;">CONTROLLER MODE</p>
         <input type="text" id="mobile-code-input" placeholder="CODE" maxlength="5">
         <div id="error-msg"></div>
         <div class="join-btns">
@@ -259,12 +259,13 @@
     </div>
 
     <script>
-        // Supabase configuration
         const SB_URL = "https://pqfydiligbnxpophipti.supabase.co";
         const SB_KEY = "sb_publishable_LE6Y0ujYmKgP8O69zu-gjA_q7GAN5wG";
         
-        // Use sbClient to avoid conflict with the globally defined 'supabase' identifier
-        const sbClient = window.supabase.createClient(SB_URL, SB_KEY);
+        // Configured with auth persistence off to prevent session locks in the same browser
+        const sbClient = window.supabase.createClient(SB_URL, SB_KEY, {
+            auth: { persistSession: false }
+        });
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -301,10 +302,10 @@
                 document.getElementById('main-menu').classList.add('hidden');
                 document.getElementById('lobby-ui').classList.remove('hidden');
                 
-                roomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+                // Generates a shorter, simpler 4-digit code for easier typing
+                roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
                 document.getElementById('lobby-code').textContent = roomCode;
 
-                // Create room using your schema
                 const { error } = await sbClient.from('rooms').insert([{
                     code: roomCode,
                     mode: 'online',
@@ -318,13 +319,13 @@
                 }]);
 
                 if (error) {
-                    console.error(error);
-                    alert("Failed to create room.");
+                    console.error("Room creation error:", error);
+                    alert("Database connection error. Please refresh.");
                     return;
                 }
 
-                // Listen for players joining
-                sbClient.channel('room_updates')
+                // Subscribe to real-time updates for player inputs and join status
+                sbClient.channel(`room_${roomCode}`)
                     .on('postgres_changes', { 
                         event: 'UPDATE', 
                         schema: 'public', 
@@ -334,7 +335,8 @@
                         const data = payload.new.state;
                         inputs = data.inputs;
                         document.getElementById('waiting-status').innerHTML = 
-                            `P1: ${data.p1Active ? 'READY' : '...'} | P2: ${data.p2Active ? 'READY' : '...'}`;
+                            `<span style="color:${data.p1Active ? '#0f0':'#f00'}">P1: ${data.p1Active ? 'READY' : 'WAITING'}</span> | 
+                             <span style="color:${data.p2Active ? '#0f0':'#f00'}">P2: ${data.p2Active ? 'READY' : 'WAITING'}</span>`;
                         
                         if (data.p1Active && data.p2Active && gameState === 'MENU') {
                             startGame();
@@ -347,28 +349,33 @@
         async function joinAs(pKey) {
             const codeInput = document.getElementById('mobile-code-input').value.trim().toUpperCase();
             const err = document.getElementById('error-msg');
-            if (codeInput.length < 3) { err.textContent = "Enter code!"; return; }
+            if (!codeInput) { err.textContent = "Please enter a code"; return; }
 
-            err.textContent = "Connecting...";
+            err.textContent = "Searching for room...";
             
-            // Fetch current room state
-            const { data, error } = await sbClient.from('rooms')
-                .select('*')
-                .eq('code', codeInput)
-                .single();
+            // Implementation of a retry loop to account for Supabase replication lag
+            let roomData = null;
+            for(let i=0; i<3; i++) {
+                const { data } = await sbClient.from('rooms').select('*').eq('code', codeInput).single();
+                if (data) { roomData = data; break; }
+                await new Promise(r => setTimeout(r, 800)); // Wait before retry
+            }
 
-            if (error || !data) { err.textContent = "Room not found!"; return; }
+            if (!roomData) { 
+                err.textContent = "Room '" + codeInput + "' not found. Check the code on the main screen."; 
+                return; 
+            }
 
-            let newState = data.state;
-            if (newState[pKey + 'Active']) { err.textContent = "Slot taken!"; return; }
+            let newState = roomData.state;
+            if (newState[pKey + 'Active']) { err.textContent = pKey.toUpperCase() + " slot is already taken!"; return; }
 
             newState[pKey + 'Active'] = true;
             
             const { error: upError } = await sbClient.from('rooms')
-                .update({ state: newState, status: (newState.p1Active && newState.p2Active) ? 'playing' : 'waiting' })
+                .update({ state: newState })
                 .eq('code', codeInput);
 
-            if (upError) { err.textContent = "Error joining!"; return; }
+            if (upError) { err.textContent = "Connection error. Try again."; return; }
 
             roomCode = codeInput;
             document.getElementById('mobile-join-view').classList.add('hidden');
@@ -384,37 +391,38 @@
         }
 
         function setupController(pKey) {
-            const updateState = async () => {
-                // Get fresh state to avoid overwriting other player's input
+            const updateRemoteInput = async () => {
                 const { data } = await sbClient.from('rooms').select('state').eq('code', roomCode).single();
                 if (!data) return;
                 
                 let s = data.state;
-                s.inputs[pKey] = inputs[pKey];
+                s.inputs[pKey] = inputs[pKey]; // Only overwrite our specific player's data
                 
                 await sbClient.from('rooms').update({ state: s }).eq('code', roomCode);
             };
 
-            const bind = (id, key) => {
+            const bindTouch = (id, key) => {
                 const el = document.getElementById(id);
-                const handle = (val) => async (e) => {
+                const handle = (isDown) => async (e) => {
                     e.preventDefault();
-                    if (inputs[pKey][key] === val) return;
-                    inputs[pKey][key] = val;
-                    val ? el.classList.add('active') : el.classList.remove('active');
-                    await updateState();
+                    if (inputs[pKey][key] === isDown) return;
+                    inputs[pKey][key] = isDown;
+                    isDown ? el.classList.add('active') : el.classList.remove('active');
+                    await updateRemoteInput();
                 };
                 el.addEventListener('touchstart', handle(true));
                 el.addEventListener('touchend', handle(false));
+                el.addEventListener('mousedown', handle(true)); // Support desktop testing
+                el.addEventListener('mouseup', handle(false));
             };
 
-            bind('btn-left', 'left');
-            bind('btn-right', 'right');
-            bind('btn-up', 'up');
-            bind('btn-kick', 'kick');
+            bindTouch('btn-left', 'left');
+            bindTouch('btn-right', 'right');
+            bindTouch('btn-up', 'up');
+            bindTouch('btn-kick', 'kick');
         }
 
-        // Game Logic
+        // Game Core
         function startGame() {
             gameState = 'PLAY';
             document.getElementById('ui-overlay').classList.add('hidden');
@@ -480,7 +488,6 @@
                 ball.vx *= -0.7; ball.x = ball.x < ball.r ? ball.r : W - ball.r; 
             }
             
-            // Goal logic
             if (ball.y > GROUND_Y - 160) {
                 if (ball.x < 80) { scores.p2++; resetBall(); }
                 if (ball.x > W - 80) { scores.p1++; resetBall(); }
@@ -507,14 +514,10 @@
             if (gameState === 'PLAY') {
                 handlePhysics();
                 ctx.clearRect(0, 0, W, H);
-                // Pitch
                 ctx.fillStyle = '#2ecc71'; ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
                 ctx.strokeStyle = '#fff'; ctx.lineWidth = 4;
                 ctx.strokeRect(0, GROUND_Y - 160, 80, 160); ctx.strokeRect(W - 80, GROUND_Y - 160, 80, 160);
-                
                 drawPlayer(p1); drawPlayer(p2);
-                
-                // Ball
                 ctx.save(); ctx.translate(ball.x, ball.y); ctx.rotate(ball.rot);
                 ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, ball.r, 0, Math.PI*2); ctx.fill();
                 ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
@@ -530,7 +533,6 @@
             ctx.restore();
         }
 
-        // Keyboard support for testing
         window.onkeydown = (e) => {
             if (e.code === 'ArrowLeft') inputs.p1.left = true;
             if (e.code === 'ArrowRight') inputs.p1.right = true;
